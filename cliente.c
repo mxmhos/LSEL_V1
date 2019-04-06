@@ -7,14 +7,14 @@
 #include<netinet/in.h>
 #include<netdb.h>
 #include "cliente.h"
-
+//hola
 
 int ComprueboServer(){
-  int conexion;
+  int conexion, aux;
   char buffer[100];
   char cab[10];
   int par1, par2;
-  char par3[2];
+  char par3[2], par4[2];
 
   struct sockaddr_in cliente; 		//Declaración de la estructura con información para la conexión
   struct hostent *servidor; 		//Declaración de la estructura con información del host
@@ -67,33 +67,45 @@ int ComprueboServer(){
 	ptr = strtok(NULL, " ");
 	par2=atoi(ptr); //printf("par 2: '%d'\n", par2);
 	ptr = strtok(NULL, " ");
-	strcpy(par3, ptr);; //printf("par 3: '%s'\n", par3);
+	strcpy(par3, ptr); //printf("par 3: '%s'\n", par3);
+	ptr = strtok(NULL, " ");
+	strcpy(par4, ptr); //printf("par 4: '%s'\n", par4);
+
 
 	if (strcmp(cab, "clienteC")==0)	{
-		printf("Recibo un dato valido\n");
-		if (par1>0) {
-			flags_juego |= FLAG_JOYSTICK_LEFT;
-			next_move.x=(P_MAX - P_MIN)/2 + par1;
-			}
-		if (par1<0) {
-			flags_juego |= FLAG_JOYSTICK_RIGHT;
-			next_move.x=(P_MAX - P_MIN)/2+ par1;
-			}
-		if (par2>0) {
-			flags_juego |= FLAG_JOYSTICK_UP;
-			next_move.y=(P_MAX - P_MIN)/2+ par2;
-			}
-		if (par2<0) {
-			flags_juego |= FLAG_JOYSTICK_DOWN;
-			next_move.y=(P_MAX - P_MIN)/2+ par2;
-			}
+		//printf("Recibo un dato valido\n");
+
+		aux=(P_MAX + P_MIN)/2 + par1;
+		if ((aux<next_move.x-1)||(aux>next_move.x+1)) {
+			if (aux>next_move.x)
+				flags_juego |= FLAG_JOYSTICK_LEFT;
+			if (aux<next_move.x)
+				flags_juego |= FLAG_JOYSTICK_RIGHT;
+			next_move.x=aux;
+			//flags_juego |= FLAG_MOVE; 
+		}
+
+		aux=(P_MAX + P_MIN)/2 + par2;
+		if ((aux<next_move.y-1)||(aux>next_move.y+1)) {
+			if (aux>next_move.y) 
+				flags_juego |= FLAG_JOYSTICK_UP;
+			if (aux<next_move.y)
+				flags_juego |= FLAG_JOYSTICK_DOWN;
+			next_move.y=aux;
+			//flags_juego |= FLAG_MOVE; 
+		}
+
 		if (strcmp(par3, "F")==0)
 			flags_juego |= FLAG_TRIGGER_BUTTON;
-		printf("Pase los flags, con par3 = %s", par3);
+
+		if (strcmp(par4, "S")==0)
+			flags_juego |= FLAG_TARGET_DONE;
+
+		printf("Pase los flags, con par1 = %d, par3 = %d, par3 = %s, par4 = %s\n", par1, par2, par3, par4);
 	}
 	else	{
 		printf("Recibi algo, pero no era para mi\n");
-		par1=0; par2=0; strcmp(par3, "W");
+		par1=0; par2=0; strcmp(par3, "W"); strcmp(par4, "N");
 	}
 
 return 0;

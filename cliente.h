@@ -16,7 +16,7 @@
 #include "torreta.h"
 
 extern int flags_juego;
-extern TipoPosicionTorreta next_move;
+extern TipoPosicionTorreta2 next_move;
 
 // Prototipos de funciones de entrada
 int ComprueboServer ();

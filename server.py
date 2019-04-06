@@ -10,7 +10,7 @@ import sys
 import re
 
 # variables
-host = '192.168.1.202'
+host = '192.168.1.202' # '172.16.2.3' #
 port = 8080
 backlog = 5
 size = 1024
@@ -18,6 +18,12 @@ remain = 1
 mx='0'
 my='0'
 jb='W'
+tf='N'
+topo_act='0'
+topo_fire='0'
+topo_next='0'
+ident='0'
+
 
 # Main function
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -41,9 +47,6 @@ while remain:
 			if re.search('leds', data):
 				# Update leds data
 				data=('leds' + ' ' + mx + ' ' + my + ' ' + jb)
-				mx='0'
-				my='0'
-				jb='W'
 				print ('pedido leds', data)
 				client.send(data)
 			elif re.search('mando', data):
@@ -55,9 +58,33 @@ while remain:
 				print ('info mando', data)
 			elif re.search('clienteC', data):
 				# Recibo cliente en C
-				data=('clienteC' + ' ' + mx + ' ' + my + ' ' + jb)
+				data=('clienteC' + ' ' + mx + ' ' + my + ' ' + jb + ' ' + tf)
+				jb='W'
+				tf='N'
 				client.send(data)
-				print ("cliente C: ", data, "  host:", host,"  port:", port)
+				#print ("cliente C: ", data, "  host:", host,"  port:", port)
+			elif  re.search('topo',data):
+				# Recibo dato topo0
+				lista = data.split(' ')
+				topo_act = lista[1]
+				topo_fire = lista[2]
+				print ('info topo:', data)
+				if topo_act == 'off':
+					if topo_next=='1':
+						data=('topo on\n')
+						print ('Mando instruccion encender topo')
+						client.send(data)
+					elif topo_next=='0':
+						data=('topo off\n')
+						client.send(data)
+				elif topo_act== 'on':
+					if topo_next=='0':
+						data=('topo off\n')
+						print ('Mando instruccion apagar topo')
+					if topo_fire == 'si':
+						tf='S'
+						print ('Recibo topo fire')
+
 #            else:
 #                # Simply answer with a Not Found HTTP response
 #                data = 'HTTP/1.1 404 Not Found\r\n'
@@ -66,8 +93,68 @@ while remain:
 		elif s == sys.stdin:
 			# Read keys and exit
 			teclado = sys.stdin.readline()
-			if teclado == "q":
+			lista=teclado.split(' ')
+			ident=lista[0]
+			if ident == "topo":
+				if lista[1]=="on":
+					topo_next='1'
+					print ('Cargo instruccion encender topo')
+				elif lista[1]=="off":
+					topo_next='0'
+					print ('Cargo instruccion apagar topo')
+				else:
+					print ('Ident topo pero con error en orden')
+			elif ident == "s":
+				mx=lista[1]
+				my=lista[2]
+				jb=lista[3]
+				tf=lista[4]		
+				print ('datos cargados:' + ' ' + mx + ' ' + my + ' ' + jb + ' ' + tf)
+			elif teclado.strip() == "1":
+				mx='50'
+				my='-50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "2":
+				mx='0'
+				my='-50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "3":
+				mx='-50'
+				my='-50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "4":
+				mx='50'
+				my='0'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "5":
+				mx='0'
+				my='0'
+				jb='F'
+				tf='N'
+			elif teclado.strip() == "6":
+				mx='-50'
+				my='0'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "7":
+				mx='50'
+				my='50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "8":
+				mx='0'
+				my='50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "9":
+				mx='-50'
+				my='50'
+				jb='W'
+				tf='N'
+			elif teclado.strip() == "q":
 				remain = 0
-			else:
-				print ('ingreso por teclado de: ', taclado)
 server.close()

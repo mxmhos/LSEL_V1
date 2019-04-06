@@ -3,7 +3,7 @@ import sys
 import time
 from sense_hat import SenseHat
 
-host = '192.168.1.202'
+host = '192.168.1.202' #'172.16.2.3' # 
 sense = SenseHat()
 
 port = 8080
@@ -13,8 +13,8 @@ y=0
 j='W'
 
 while True:
-        x = int(sense.get_accelerometer_raw()['x']*50)
-        y = int(sense.get_accelerometer_raw()['y']*50)
+        y = int(sense.get_accelerometer_raw()['x']*50)
+        x = int(sense.get_accelerometer_raw()['y']*50)
 
 	for event in sense.stick.get_events():
 		if event.action == "pressed":
@@ -40,5 +40,11 @@ while True:
 	j='W'
 	s.send(data)
 	print('Se lanza envio de MANDO', data)
-	time.sleep(.4)
+	time.sleep(.210)
 	
+
+
+
+
+
+

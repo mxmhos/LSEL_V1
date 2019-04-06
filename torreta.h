@@ -14,6 +14,7 @@
 
 #include "piTankGoLib.h"
 
+
 typedef struct {
 	int inicio; // Valor correspondiente a la posicion inicial del servo
 	int incremento; // Cuantía en que se incrementa el valor de la posicion con cada movimiento del servo
@@ -30,7 +31,9 @@ typedef struct {
 	TipoPosicionTorreta posicion;
 	TipoServo servo_x;
 	TipoServo servo_y;
-	
+
+	// A completar por el alumno (declaracion del temporizador para control duracion disparo)
+	// ...
 } TipoTorreta;
 
 extern int flags_juego;
@@ -40,6 +43,7 @@ void InicializaTorreta (TipoTorreta *p_torreta);
 
 // Prototipos de funciones de entrada
 int CompruebaComienzo (fsm_t* this);
+int CompruebaMove (fsm_t* this);
 int CompruebaJoystickUp (fsm_t* this);
 int CompruebaJoystickDown (fsm_t* fsm_player);
 int CompruebaJoystickLeft (fsm_t* this);
@@ -52,6 +56,7 @@ int NoComprueboNada (fsm_t* this);
 
 // Prototipos de funciones de salida
 void ComienzaSistema (fsm_t* this);
+void FunMueve (fsm_t* this);
 void MueveTorretaArriba (fsm_t* this);
 void MueveTorretaAbajo (fsm_t* this);
 void MueveTorretaIzquierda (fsm_t* this);

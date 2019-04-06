@@ -6,11 +6,14 @@
 
 #include "fsm.h"
 #include "tmr.h"
+#include "torreta.h"
 
 #define CLK_MS 10
+#define CLK_THREAD 10000
+#define CLK_TRR 10
 
 // DIRECCION DE SERVER
-#define host "192.168.1.202" // "172.16.2.4"
+#define host "192.168.1.202" // "172.16.2.3" // // "172.16.2.4"
 #define puerto	8080
 
 // VALORES DE CONFIGURACION SERVER
@@ -61,14 +64,13 @@
 
 // Distribucion de pines GPIO empleada para el enlace IR
 // ATENCION: Valores a modificar por el alumno
-#define	IR_TX_PIN		25
+#define	IR_TX_PIN		0
 #define	IR_RX_PIN		0
 
 // Distribucion de pines GPIO empleada para la reproducción de efectos
 // ATENCION: Valores a modificar por el alumno
 
-#define PLAYER_PWM_PIN 24
-
+#define PLAYER_PWM_PIN 24 	//GPIO18
 #define NO_SONAR 0 		//frecuencia de 0Hz
 
 // Distribucion de pines GPIO empleada para el control de los servos
@@ -88,6 +90,7 @@
 #define FLAG_SHOOT_TIMEOUT		0x040
 #define FLAG_TARGET_DONE		0x080
 #define FLAG_SYSTEM_END			0x100
+#define FLAG_MOVE			0x200
 
 // FLAGS FSM REPRODUCCION DE EFECTOS DE SONIDO
 // ATENCION: Valores a modificar por el alumno
@@ -109,9 +112,16 @@ enum interruption_sources {
 	//JOYSTICK_CENTER_ISR
 };
 
+
+typedef struct {
+	int x; // Coordenada x correspondiente a la posicion del servo horizontal
+	int y; // Coordenada y correspondiente a la posicion del servo vertical
+} TipoPosicionTorreta2;
+
 extern int flags_system;
 extern int flags_player;
 extern int flags_juego;
+extern TipoPosicionTorreta2 next_move;
 
 extern int frecuenciaDespacito[];
 extern int tiempoDespacito[];

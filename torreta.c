@@ -5,16 +5,12 @@
 // PROCEDIMIENTOS DE INICIALIZACION DE LOS OBJETOS ESPECIFICOS
 //------------------------------------------------------
 
-void InicializaTorreta (TipoTorreta *p_torreta)
-{
+void InicializaTorreta (TipoTorreta *p_torreta) {
 	// A completar por el alumno...
 	int pos_ini = ((P_MAX-P_MIN)/2)+P_MIN; // Posicion inicial en el punto medio -> 90º
 
 	pinMode(GPIO19, PWM_OUTPUT);
 	pinMode(GPIO18, PWM_OUTPUT);
-
-	pinMode(IR_TX_PIN, PWM_OUTPUT);
-
 	pwmSetMode(PWM_MODE_MS);
 	pwmSetRange(RANGO);
 	pwmSetClock (DIVISOR);
@@ -35,22 +31,32 @@ void InicializaTorreta (TipoTorreta *p_torreta)
 
 	pwmWrite(GPIO19, p_torreta->posicion.x);
 	pwmWrite(GPIO18, p_torreta->posicion.y);
-
-	pwmWrite(IR_TX_PIN, 0);
+	
+	
+	
 }
 
 //------------------------------------------------------
 // FUNCIONES DE ENTRADA O DE TRANSICION DE LA MAQUINA DE ESTADOS
 //------------------------------------------------------
-int CompruebaComienzo (fsm_t* this)
-{
+
+int CompruebaComienzo (fsm_t* this) {
 	int result = 0;
-	if (flags_juego & FLAG_SYSTEM_START)
-	{
+	if (flags_juego & FLAG_SYSTEM_START){
 		printf ("Recibida senal START\n");
 		result = 1;
 	}
 	
+	return result;
+}
+
+int CompruebaMove (fsm_t* this) {
+	int result = 0;
+	if (flags_juego & FLAG_MOVE){
+		fprintf (stdout, "Joystick -> MOVE\n");
+		result = 1;
+	}
+
 	return result;
 }
 
@@ -160,83 +166,115 @@ void ComienzaSistema (fsm_t* this) {
 	fprintf (stdout, "Torreta operativa\n");
 }
 
+
+void FunMueve (fsm_t* this) {
+	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);
+
+	if (next_move.y>P_MAX)
+		torreta->posicion.y = P_MAX;
+	else if (next_move.y<P_MIN)
+		torreta->posicion.y = P_MIN;
+	else
+		torreta->posicion.y = next_move.y;
+	pwmWrite(GPIO19, torreta->posicion.y);
+
+	if (next_move.x>P_MAX)
+		torreta->posicion.x = P_MAX;
+	else if (next_move.x<P_MIN)
+		torreta->posicion.x = P_MIN;
+	else
+		torreta->posicion.x = next_move.x;
+	pwmWrite(GPIO18, torreta->posicion.x);
+
+	fprintf (stdout, "Fun move PosX:%d PosY:%d nextX:%d nextY:%d\n", torreta->posicion.x, torreta->posicion.y, next_move.x, next_move.y);
+	flags_juego &= ~FLAG_MOVE;
+}
+
 void MueveTorretaArriba (fsm_t* this) {
 	int y_next = 0;
-	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);
-	
-	fprintf (stdout, "\t\tWAIT --> UP\n");
+	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);	
 	fprintf (stdout, "Accion -> Torreta UP\n");
 	
-	y_next = torreta->posicion.y + torreta->servo_y.incremento;
-	if (y_next <= torreta->servo_y.maximo) {
-		torreta->posicion.y = y_next;
-		pwmWrite(GPIO19, torreta->posicion.y);
+	while (torreta->posicion.y<next_move.y) {
+		y_next = torreta->posicion.y + torreta->servo_y.incremento;
+		
+		if (y_next <= torreta->servo_y.maximo) {
+			torreta->posicion.y = y_next;
+			pwmWrite(GPIO19, torreta->posicion.y);
+		}
+		else if(torreta->posicion.y < torreta->servo_y.maximo) {
+			torreta->posicion.y = torreta->servo_y.maximo;
+			pwmWrite(GPIO19, torreta->posicion.y);
+			break;
+		}
+	delay(CLK_TRR);
 	}
-	else if(torreta->posicion.y < torreta->servo_y.maximo){
-		torreta->posicion.y = torreta->servo_y.maximo;
-		pwmWrite(GPIO19, torreta->posicion.y);
-	}
-	
 	flags_juego &= ~FLAG_JOYSTICK_UP;
 }
 
 void MueveTorretaAbajo (fsm_t* this) {
 	int y_next = 0;
 	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);
-	
-	fprintf (stdout, "\t\tWAIT --> DOWN\n");
 	fprintf (stdout, "Accion -> Torreta DOWN\n");
-	
-	y_next = torreta->posicion.y - torreta->servo_y.incremento;
-	if (y_next >= torreta->servo_y.minimo) {
-		torreta->posicion.y = y_next;
-		pwmWrite(GPIO19, torreta->posicion.y);
-	}
-	else if(torreta->posicion.y > torreta->servo_y.minimo){
-		torreta->posicion.y = torreta->servo_y.minimo;
-		pwmWrite(GPIO19, torreta->posicion.y);
-	}
 
+	while (torreta->posicion.y>next_move.y) {	
+		y_next = torreta->posicion.y - torreta->servo_y.incremento;
+	
+		if (y_next >= torreta->servo_y.minimo) {
+			torreta->posicion.y = y_next;
+			pwmWrite(GPIO19, torreta->posicion.y);
+		}
+		else if(torreta->posicion.y > torreta->servo_y.minimo) {
+			torreta->posicion.y = torreta->servo_y.minimo;
+			pwmWrite(GPIO19, torreta->posicion.y);
+			break;
+		}	
+	delay(CLK_TRR);
+	}
 	flags_juego &= ~FLAG_JOYSTICK_DOWN;	
 }
 
 void MueveTorretaIzquierda (fsm_t* this) {
 	int x_next=0;
 	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);
+	fprintf (stdout, "Accion -> Torreta IZQ\n");
 	
-	fprintf (stdout, "\t\tWAIT --> UP\n");
-	fprintf (stdout, "Accion -> Torreta UP\n");
-	
-	x_next = torreta->posicion.x + torreta->servo_x.incremento;
-	if (x_next <= torreta->servo_x.maximo) {
-		torreta->posicion.x = x_next;
-		pwmWrite(GPIO18, torreta->posicion.x);
-	}
-	else if(torreta->posicion.x > torreta->servo_x.maximo){
-		torreta->posicion.x = torreta->servo_x.maximo;
-		pwmWrite(GPIO18, torreta->posicion.x);
-	}	
+	while (torreta->posicion.x<next_move.x) {
+		x_next = torreta->posicion.x + torreta->servo_x.incremento;
 
+		if (x_next <= torreta->servo_x.maximo) {
+			torreta->posicion.x = x_next;
+			pwmWrite(GPIO18, torreta->posicion.x);
+		}
+		else if(torreta->posicion.x > torreta->servo_x.maximo) {
+			torreta->posicion.x = torreta->servo_x.maximo;
+			pwmWrite(GPIO18, torreta->posicion.x);
+			break;
+		}
+	delay(CLK_TRR);
+	}
 	flags_juego &= ~FLAG_JOYSTICK_LEFT;
 }
 
 void MueveTorretaDerecha (fsm_t* this) {
 	int x_next=0;
 	TipoTorreta* torreta = (TipoTorreta*)(this->user_data);
+	fprintf (stdout, "Accion -> Torreta DER\n");
 	
-	fprintf (stdout, "\t\tWAIT --> UP\n");
-	fprintf (stdout, "Accion -> Torreta UP\n");
-	
-	x_next = torreta->posicion.x - torreta->servo_x.incremento;
-	if (x_next >= torreta->servo_x.minimo) {
-		torreta->posicion.x = x_next;
-		pwmWrite(GPIO18, torreta->posicion.x);
+	while (torreta->posicion.x>next_move.x) {
+		x_next = torreta->posicion.x - torreta->servo_x.incremento;
+
+		if (x_next >= torreta->servo_x.minimo) {
+			torreta->posicion.x = x_next;
+			pwmWrite(GPIO18, torreta->posicion.x);
+		}
+		else if(torreta->posicion.x < torreta->servo_x.minimo) {
+			torreta->posicion.x = torreta->servo_x.minimo;
+			pwmWrite(GPIO18, torreta->posicion.x);
+			break;
+		}
+	delay(CLK_TRR);
 	}
-	else if(torreta->posicion.x < torreta->servo_x.minimo){
-		torreta->posicion.x = torreta->servo_x.minimo;
-		pwmWrite(GPIO18, torreta->posicion.x);
-	}
-	
 	flags_juego &= ~FLAG_JOYSTICK_RIGHT;	
 }
 
@@ -244,8 +282,6 @@ void DisparoIR (fsm_t* this) {
 	flags_juego &= ~FLAG_TRIGGER_BUTTON;
 	flags_player |= FLAG_START_DISPARO;
 	fprintf (stdout, "Accion -> Disparo\n");
-	
-	//pwmWrite(IR_TX_PIN, 1);
 }
 
 void FinalDisparoIR (fsm_t* this) {
