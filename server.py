@@ -44,18 +44,15 @@ while remain:
 #		data = data.replace('Hab', 'No hay sensores conectados', 1)
 #               print(data)
 #		client.send(data)
-			if re.search('leds', data):
-				# Update leds data
-				data=('leds' + ' ' + mx + ' ' + my + ' ' + jb)
-				print ('pedido leds', data)
-				client.send(data)
-			elif re.search('mando', data):
+			if re.search('mando', data):
 				# Update acc data
 				lista = data.split(' ')
 				mx=lista[1]
 				my=lista[2]
 				jb=lista[3]
 				print ('info mando', data)
+				data=('leds' + ' ' + tf)
+				client.send(data)
 			elif re.search('clienteC', data):
 				# Recibo cliente en C
 				data=('clienteC' + ' ' + mx + ' ' + my + ' ' + jb + ' ' + tf)

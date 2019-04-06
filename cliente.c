@@ -100,6 +100,7 @@ int ComprueboServer(){
 
 		if (strcmp(par4, "S")==0)
 			flags_juego |= FLAG_TARGET_DONE;
+			flags_juego |= FLAG_START_IMPACTO;
 
 		printf("Pase los flags, con par1 = %d, par3 = %d, par3 = %s, par4 = %s\n", par1, par2, par3, par4);
 	}
