@@ -85,7 +85,7 @@ int ComprueboServer(){
 			//flags_juego |= FLAG_MOVE; 
 		}
 
-		aux=(P_MAX + P_MIN)/2 + par2;
+		aux= P_MIN + par2;
 		if ((aux<next_move.y-1)||(aux>next_move.y+1)) {
 			if (aux>next_move.y) 
 				flags_juego |= FLAG_JOYSTICK_UP;
@@ -97,10 +97,13 @@ int ComprueboServer(){
 
 		if (strcmp(par3, "F")==0)
 			flags_juego |= FLAG_TRIGGER_BUTTON;
+		//if (strcmp(par3, "fin")==0)
+		//	flags_player |= FLAG_GAME_END;
 
-		if (strcmp(par4, "S")==0)
+		if (strcmp(par4, "S")==0) {
 			flags_juego |= FLAG_TARGET_DONE;
-			flags_juego |= FLAG_START_IMPACTO;
+			flags_player |= FLAG_START_IMPACTO;
+		}
 
 		printf("Pase los flags, con par1 = %d, par3 = %d, par3 = %s, par4 = %s\n", par1, par2, par3, par4);
 	}

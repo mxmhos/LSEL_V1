@@ -31,6 +31,7 @@ enum fsm_state {
 	WAIT_NEXT,
 	WAIT_MOVE,
 	WAIT_END,
+	GAME_END,
 	MOVE,
 	JOYSTICK_UP,
 	JOYSTICK_DOWN,

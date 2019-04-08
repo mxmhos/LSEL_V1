@@ -10,7 +10,7 @@ import sys
 import re
 
 # variables
-host = '192.168.1.202' # '172.16.2.3' #
+host =  '172.16.2.3' # '192.168.1.202' #
 port = 8080
 backlog = 5
 size = 1024
@@ -19,6 +19,7 @@ mx='0'
 my='0'
 jb='W'
 tf='N'
+tf2='N'
 topo_act='0'
 topo_fire='0'
 topo_next='0'
@@ -51,7 +52,8 @@ while remain:
 				my=lista[2]
 				jb=lista[3]
 				print ('info mando', data)
-				data=('leds' + ' ' + tf)
+				data=('leds' + ' ' + tf2)
+				tf2='N'
 				client.send(data)
 			elif re.search('clienteC', data):
 				# Recibo cliente en C
@@ -78,8 +80,10 @@ while remain:
 					if topo_next=='0':
 						data=('topo off\n')
 						print ('Mando instruccion apagar topo')
+						client.send(data)
 					if topo_fire == 'si':
 						tf='S'
+						tf2='S'
 						print ('Recibo topo fire')
 
 #            else:
@@ -101,12 +105,20 @@ while remain:
 					print ('Cargo instruccion apagar topo')
 				else:
 					print ('Ident topo pero con error en orden')
-			elif ident == "s":
-				mx=lista[1]
-				my=lista[2]
-				jb=lista[3]
-				tf=lista[4]		
-				print ('datos cargados:' + ' ' + mx + ' ' + my + ' ' + jb + ' ' + tf)
+			
+			elif teclado.strip() == "o":
+				topo_next='1'
+				print ('Cargo instruccion encender topo')
+			elif teclado.strip() == "n":
+				topo_next='0'
+				print ('Cargo instruccion apagar topo')
+
+
+			elif teclado.strip() == "f":
+				tf='S'
+				tf2='S'
+				print ('Cargo instruccion disparo efectivo')
+
 			elif teclado.strip() == "1":
 				mx='50'
 				my='-50'

@@ -3,7 +3,7 @@
 #include "torreta.h"
 #include "player.h"
 
-int frecuenciaDespacito[160] = {0,1175,1109,988,740,740,740,740,740,740,988,988,988,988,880,988,784,0,784,784,784,784,784,988,988,988,988,1109,1175,880,0,880,880,880,880,880,1175,1175,1175,1175,1318,1318,1109,0,1175,1109,988,740,740,740,740,740,740,988,988,988,988,880,988,784,0,784,784,784,784,784,988,988,988,988,1109,1175,880,0,880,880,880,880,880,1175,1175,1175,1175,1318,1318,1109,0,1480,1318,1480,1318,1480,1318,1480,1318,1480,1318,1480,1568,1568,1175,0,1175,1568,1568,1568,0,1568,1760,1568,1480,0,1480,1480,1480,1760,1568,1480,1318,659,659,659,659,659,659,659,659,554,587,1480,1318,1480,1318,1480,1318,1480,1318,1480,1318,1480,1568,1568,1175,0,1175,1568,1568,1568,1568,1760,1568,1480,0,1480,1480,1480,1760,1568,1480,1318};
+int frecuenciaDespacito[160] ={0,1175,1109,988,740,740,740,740,740,740,988,988,988,988,880,988,784,0,784,784,784,784,784,988,988,988,988,1109,1175,880,0,880,880,880,880,880,1175,1175,1175,1175,1318,1318,1109,0,1175,1109,988,740,740,740,740,740,740,988,988,988,988,880,988,784,0,784,784,784,784,784,988,988,988,988,1109,1175,880,0,880,880,880,880,880,1175,1175,1175,1175,1318,1318,1109,0,1480,1318,1480,1318,1480,1318,1480,1318,1480,1318,1480,1568,1568,1175,0,1175,1568,1568,1568,0,1568,1760,1568,1480,0,1480,1480,1480,1760,1568,1480,1318,659,659,659,659,659,659,659,659,554,587,1480,1318,1480,1318,1480,1318,1480,1318,1480,1318,1480,1568,1568,1175,0,1175,1568,1568,1568,1568,1760,1568,1480,0,1480,1480,1480,1760,1568,1480,1318};
 
 int tiempoDespacito[160] = {1200,600,600,300,300,150,150,150,150,150,150,150,150,300,150,300,343,112,150,150,150,150,150,150,150,150,300,150,300,300,150,150,150,150,150,150,150,150,150,300,150,300,800,300,600,600,300,300,150,150,150,150,150,150,150,150,300,150,300,343,112,150,150,150,150,150,150,150,150,300,150,300,300,150,150,150,150,150,150,150,150,150,300,150,300,450,1800,150,150,150,150,300,150,300,150,150,150,300,150,300,450,450,300,150,150,225,75,150,150,300,450,800,150,150,300,150,150,300,450,150,150,150,150,150,150,150,150,300,300,150,150,150,150,150,150,450,150,150,150,300,150,300,450,450,300,150,150,150,300,150,300,450,800,150,150,300,150,150,300,450};
 
@@ -65,7 +65,8 @@ int ConfiguraSistema (TipoSistema *p_sistema) {
 
     timer_efecto = tmr_new (timer_player_duracion_nota_actual_isr);//funcion que se va a llamar cuando se produzca la interrupción
 
-
+   pinMode (4, OUTPUT);
+   digitalWrite (4,  LOW); 
 
     return result;
 }
@@ -79,11 +80,13 @@ int InicializaSistema (TipoSistema *p_sistema) {
 	int result = 0;
 
     next_move.x= (P_MAX -P_MIN)/2;
-    next_move.y= (P_MAX -P_MIN)/2;
+    next_move.y= P_MIN;
 
     InicializaEfecto (&(p_sistema->player.efecto_disparo), "Disparo", frecuenciasDisparo, tiemposDisparo, 16);//sizeof(tiemposDisparo)/sizeof(tiempoDisparo[0]---->el tamaño de memoria usado se divide entre lo que ocupa un valor de memoria
 
     InicializaEfecto (&(p_sistema->player.efecto_impacto), "Impacto", frecuenciasImpacto, tiemposImpacto, 32);
+
+    InicializaEfecto (&(p_sistema->player.efecto_fin), "Fin", frecuenciaStarwars, tiempoStarwars, 59);
 
 
 
@@ -209,6 +212,7 @@ int main ()
 	fsm_trans_t reproductor[] = {
 		{ WAIT_START, CompruebaStartDisparo, WAIT_NEXT, InicializaPlayDisparo },
 		{ WAIT_START, CompruebaStartImpacto, WAIT_NEXT, InicializaPlayImpacto },
+		{ WAIT_START, CompruebaStartEnd, GAME_END, InicializaEndGame },
 		{ WAIT_NEXT, CompruebaStartImpacto, WAIT_NEXT, InicializaPlayImpacto },
 		{ WAIT_NEXT, CompruebaNotaTimeout, WAIT_END, ActualizaPlayer },
 		{ WAIT_END, CompruebaFinalEfecto, WAIT_START, FinalEfecto },
@@ -218,7 +222,7 @@ int main ()
 
 	fsm_trans_t torreta[] = {
 		{ WAIT_START, CompruebaComienzo, WAIT_MOVE, ComienzaSistema },
-		{ WAIT_MOVE, CompruebaMove, MOVE, FunMueve },
+		//{ WAIT_MOVE, CompruebaMove, MOVE, FunMueve },
 		{ MOVE, NoComprueboNada, WAIT_MOVE, NULL },
 		{ WAIT_MOVE, CompruebaJoystickUp, JOYSTICK_UP, MueveTorretaArriba },
 		{ JOYSTICK_UP, NoComprueboNada, WAIT_MOVE, NULL },
@@ -236,8 +240,8 @@ int main ()
 	};
 
 	fsm_t* player_fsm = fsm_new (WAIT_START, reproductor, &(sistema.player));
-	fsm_t* torreta_fsm = fsm_new (WAIT_MOVE, torreta, &(sistema.torreta));
-	ComienzaSistema(torreta_fsm);
+	fsm_t* torreta_fsm = fsm_new (WAIT_START, torreta, &(sistema.torreta));
+	//ComienzaSistema(torreta_fsm);
 
 	next = millis();
 	while (1) {

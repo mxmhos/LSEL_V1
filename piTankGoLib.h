@@ -9,11 +9,11 @@
 #include "torreta.h"
 
 #define CLK_MS 10
-#define CLK_THREAD 10000
+#define CLK_THREAD 400
 #define CLK_TRR 10
 
 // DIRECCION DE SERVER
-#define host "192.168.1.202" // "172.16.2.3" // // "172.16.2.4"
+#define host "172.16.2.3" // "192.168.1.202" //  // "172.16.2.4"
 #define puerto	8080
 
 // VALORES DE CONFIGURACION SERVER
@@ -98,6 +98,7 @@
 #define FLAG_START_IMPACTO 		0x02
 #define FLAG_PLAYER_END			0x04
 #define FLAG_NOTA_TIMEOUT		0x08
+#define FLAG_GAME_END 			0x10
 
 enum interruption_sources {
 	TARGET_ISR,

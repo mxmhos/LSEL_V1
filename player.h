@@ -34,6 +34,7 @@ typedef struct {
 
     TipoEfecto efecto_disparo; // Efecto de disparo
     TipoEfecto efecto_impacto; // Efecto de impacto
+    TipoEfecto efecto_fin; // Efecto de impacto
 
     // A completar por el alumno (declaracion del temporizador para control duracion notas)
     // ...
@@ -51,6 +52,7 @@ int CompruebaStartImpacto (fsm_t* this);
 int CompruebaNuevaNota (fsm_t* this);
 int CompruebaNotaTimeout (fsm_t* this);
 int CompruebaFinalEfecto (fsm_t* this);
+int CompruebaStartEnd (fsm_t* this);
 
 // Prototipos de funciones de salida
 void InicializaPlayDisparo (fsm_t* this);
@@ -58,6 +60,7 @@ void InicializaPlayImpacto (fsm_t* this);
 void ComienzaNuevaNota (fsm_t* this);
 void ActualizaPlayer (fsm_t* this);
 void FinalEfecto (fsm_t* this);
+void InicializaEndGame (fsm_t* this);
 
 // Prototipos de procedimientos de atencion a las interrupciones
 void timer_player_duracion_nota_actual_isr (union sigval value);

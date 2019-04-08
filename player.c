@@ -84,6 +84,18 @@ int CompruebaStartImpacto (fsm_t* this)
     return result;
 }
 
+int CompruebaStartEnd (fsm_t* this)
+{
+    int result = 0;
+    //desde otro punto se le tiene que mandar el flag de que ha habido impacto
+    if (flags_player & FLAG_GAME_END)
+    {
+        result = 1;
+    }
+
+    return result;
+}
+
 int CompruebaNuevaNota (fsm_t* this)
 {
     int result = 0;
@@ -125,6 +137,8 @@ void InicializaPlayDisparo (fsm_t* this)
     player->p_efecto = &(player->efecto_disparo);
     InicializaPlayer (player);//se le pasa toda la estrucctura player
     flags_player &= ~FLAG_START_DISPARO;//se deshabilita el flag de disparo
+
+    digitalWrite (4, HIGH);
 }
 
 void InicializaPlayImpacto (fsm_t* this)
@@ -133,6 +147,15 @@ void InicializaPlayImpacto (fsm_t* this)
     player->p_efecto = &(player->efecto_impacto);
     InicializaPlayer (player);
     flags_player &= ~FLAG_START_IMPACTO;//se deshabilita el flag para que no vuelva a entrar por el mismo flag
+
+}
+
+void InicializaEndGame (fsm_t* this)
+{
+	TipoPlayer* player = (TipoPlayer*)(this->user_data);
+    player->p_efecto = &(player->efecto_fin);
+    InicializaPlayer (player);
+    flags_player &= ~FLAG_GAME_END;//se deshabilita el flag para que no vuelva a entrar por el mismo flag
 }
 
 void ComienzaNuevaNota (fsm_t* this)
@@ -167,6 +190,7 @@ void ActualizaPlayer (fsm_t* this)
 void FinalEfecto (fsm_t* this)
 {
     softToneWrite (PLAYER_PWM_PIN, NO_SONAR);//probar con softStop(int pin)
+    digitalWrite (4, LOW);
     flags_player &= ~FLAG_PLAYER_END;//quitamos el flag de final de efecto
 }
 
