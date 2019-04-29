@@ -10,7 +10,7 @@ import sys
 import re
 
 # variables
-host =  '172.16.2.3' # '192.168.1.202' #
+host =  '172.16.2.3' #'192.168.1.202' #  
 port = 8080
 backlog = 5
 size = 1024
@@ -51,7 +51,7 @@ while remain:
 				mx=lista[1]
 				my=lista[2]
 				jb=lista[3]
-				print ('info mando', data)
+				#print ('info mando', data)
 				data=('leds' + ' ' + tf2)
 				tf2='N'
 				client.send(data)

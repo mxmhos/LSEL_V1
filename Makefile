@@ -5,8 +5,8 @@ LDFLAGS=-lwiringPi -lrt -lcrypt -lm
 
 all: piTankGo
 
-#OBJS=kbhit.o fsm.o piTankGo_1.o player.o tmr.o torreta.o player.o cliente.o
-OBJS=kbhit.o fsm.o piTankGo_1.o tmr.o torreta.o player.o cliente.o
+#OBJS= fsm.o piTankGo_1.o player.o tmr.o torreta.o player.o cliente.o
+OBJS= fsm.o piTankGo_1.o tmr.o torreta.o player.o cliente.o
 
 piTankGo: $(OBJS)
 	$(CC) -o $@ $^ $(LDFLAGS)

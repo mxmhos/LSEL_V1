@@ -18,44 +18,31 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "kbhit.h" // Para poder detectar teclas pulsadas sin bloqueo y leer las teclas pulsadas
 #include "player.h"
 #include "torreta.h"
 #include "cliente.h"
+#include "piTankGoLib.h"
 
 // Posibles estados de las FSMs
 enum fsm_state {
 	WAIT_START,
-	WAIT_KEY,
-	WAIT_PUSH,
 	WAIT_NEXT,
-	WAIT_MOVE,
 	WAIT_END,
 	GAME_END,
-	MOVE,
-	JOYSTICK_UP,
-	JOYSTICK_DOWN,
-	JOYSTICK_LEFT,
-	JOYSTICK_RIGHT,
-	TRIGGER_BUTTON
 };
 
-typedef struct {
-	TipoTorreta torreta; // Objeto para el control de la torreta
-	TipoPlayer player; // Reproductor de efectos
-	char teclaPulsada;  // Variable que almacena la ultima tecla pulsada
-	int debug; // Variable que habilita o deshabilita la impresion de mensajes por salida estandar
-} TipoSistema;
 
 //------------------------------------------------------
 // FUNCIONES DE CONFIGURACION/INICIALIZACION
 //------------------------------------------------------
-int ConfiguraSistema (TipoSistema *p_sistema);
-int InicializaSistema (TipoSistema *p_sistema);
+int ConfiguraSistema (TipoPlayer *p_sistema);
+int InicializaSistema ();
+int InicializaTorreta (TipoTorreta *p_torreta);
 
 //------------------------------------------------------
 // FUNCIONES LIGADAS A THREADS ADICIONALES
 //------------------------------------------------------
-PI_THREAD(thread_explora_teclado_PC);
+PI_THREAD (thread_torreta);
+PI_THREAD (thread_recibe_datos);
 
 #endif /* _PITANKGO_1_H_ */

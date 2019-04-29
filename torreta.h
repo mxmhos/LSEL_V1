@@ -11,9 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wiringPi.h>
-
 #include "piTankGoLib.h"
-
 
 typedef struct {
 	int inicio; // Valor correspondiente a la posicion inicial del servo
@@ -31,43 +29,13 @@ typedef struct {
 	TipoPosicionTorreta posicion;
 	TipoServo servo_x;
 	TipoServo servo_y;
-
-	// A completar por el alumno (declaracion del temporizador para control duracion disparo)
-	// ...
 } TipoTorreta;
 
-extern int flags_juego;
+extern TipoPosicionTorreta next_move;
 
 // Prototipos de procedimientos de inicializacion de los objetos especificos
-void InicializaTorreta (TipoTorreta *p_torreta);
+int InicializaTorreta (TipoTorreta *p_torreta);
+void ComprueboTorreta();
 
-// Prototipos de funciones de entrada
-int CompruebaComienzo (fsm_t* this);
-int CompruebaMove (fsm_t* this);
-int CompruebaJoystickUp (fsm_t* this);
-int CompruebaJoystickDown (fsm_t* fsm_player);
-int CompruebaJoystickLeft (fsm_t* this);
-int CompruebaJoystickRight (fsm_t* this);
-int CompruebaTimeOutDisparo (fsm_t* this);
-int CompruebaImpacto (fsm_t* this);
-int CompruebaTriggerButton (fsm_t* this);
-int CompruebaFinalJuego (fsm_t* this);
-int NoComprueboNada (fsm_t* this);
-
-// Prototipos de funciones de salida
-void ComienzaSistema (fsm_t* this);
-void FunMueve (fsm_t* this);
-void MueveTorretaArriba (fsm_t* this);
-void MueveTorretaAbajo (fsm_t* this);
-void MueveTorretaIzquierda (fsm_t* this);
-void MueveTorretaDerecha (fsm_t* this);
-void DisparoIR (fsm_t* this);
-void FinalDisparoIR (fsm_t* this);
-void ImpactoDetectado (fsm_t* this);
-void FinalizaJuego (fsm_t* this);
-void NoHagoNada(fsm_t* this);
-
-// Prototipos de procedimientos de atencion a las interrupciones
-void timer_duracion_disparo_isr (union sigval value);
 
 #endif /* _TORRETA_H_ */

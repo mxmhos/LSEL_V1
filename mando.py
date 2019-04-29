@@ -60,8 +60,8 @@ count = 9
 sense.rotation = 270
 
 while True:
-        y = int(sense.get_accelerometer_raw()['x']*100)
-        x = int(sense.get_accelerometer_raw()['y']*50)
+        y = int(sense.get_accelerometer_raw()['x']*50)
+        x = int(sense.get_accelerometer_raw()['y']*100)
 
 	for event in sense.stick.get_events():
 		if event.action == "pressed":
@@ -77,14 +77,14 @@ while True:
 	s.connect((host,port))
 	data= ('mando' + ' ' + str(x) + ' ' + str(y) + ' ' + j)
 	s.send(data)
-	print('Se lanza envio de MANDO: ', data)
+	#print('Se lanza envio de MANDO: ', data)
 
 	if count==0:
 		count=-1
 		j='N'
 	
 	data = s.recv(size)
-	print('Recibo info dede SERVER: ', data)
+	#print('Recibo info dede SERVER: ', data)
 	
 	if count==-1:
 		sense.show_message("You WIN", text_colour=[255, 0, 0])
