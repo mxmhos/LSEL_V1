@@ -1,10 +1,3 @@
-/*
- * cliente.h
- *
- *  Created on: 21 de enero de 2019
- *      Author: FFM
- */
-
 #ifndef _CLIENTE_H_
 #define _CLIENTE_H_
 
