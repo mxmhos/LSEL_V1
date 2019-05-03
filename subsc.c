@@ -6,7 +6,7 @@
 #include <wiringPi.h>
 #include "MQTTClient.h"
 
-#define ADDRESS     "192.168.1.62:1883"
+#define ADDRESS     "192.168.43.148:1883"
 #define CLIENTID    "topo1s"
 #define TOPIC       "topos"
 #define PAYLOAD     "altosub"
@@ -44,8 +44,9 @@ for(i=0; i<message->payloadlen; i++)
  
     MQTTClient_free(topicName);
      printf("d = %s\n",d);
-      if(!strcmp(d, "alto1")){
+      if(!strcmp(d, "2")){
 	pinMode(29, OUTPUT);
+    system("mplayer starwras.mp3");
 	int i = 0;
 	for (i = 0;i<10;i++){
 		digitalWrite(29, HIGH);
