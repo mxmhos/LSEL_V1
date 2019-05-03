@@ -15,6 +15,8 @@ int tiemposImpacto[32] = {10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,
 
 int flags_player = 0;
 int flags_system = 0;
+int estado;
+int modo;
 TipoPosicionTorreta next_move;
 
 tmr_t* timer_efecto;
@@ -27,6 +29,7 @@ int ConfiguraSistema (TipoPlayer *p_player) {
 
 	//Inicialización de la configuración de wiringPi-completamente necesario
 	wiringPiSetupGpio();
+	wiringPiSetup(); // y esta?
     
 	//creación del hilo para el control del sonido
 	softToneCreate (PLAYER_PWM_PIN);
@@ -50,19 +53,16 @@ int ConfiguraSistema (TipoPlayer *p_player) {
 int InicializaSistema () {
 	int result = 0;
 
+	//Inicializo variables gobales
+	estado=1;
+	modo=1;
+
 	//Inicializo varaible next_move
 	next_move.x= (P_MAX+P_MIN)/2;
-	next_move.y= (P_MAX+P_MIN)/2;
+	next_move.y= P_MIN;
 
 	//Inicializo Pin de Laser
 	digitalWrite (LASER_PIN,  LOW); 
-
-	// Lanzamos thread para recepcion de datos
-	result = piThreadCreate (thread_recibe_datos);
-	if (result!=0) {
-		printf ("Thread de comunicaciones didn't start!!!\n");
-	return -1;
-    	}
 
 	// Lanzamos thread para movimiento de servos
 	result = piThreadCreate (thread_torreta);
@@ -75,22 +75,15 @@ int InicializaSistema () {
 }
 
 //------------------------------------------------------
-// THREADS DE COMUNICACIONES Y MOVIMIENTO
+// THREADS DE MOVIMIENTO
 //------------------------------------------------------
-
-PI_THREAD (thread_recibe_datos) {
-	while(1) {
-		delay(CLK_COMMS);
-		ComprueboServer();
-	}
-}
-
 PI_THREAD (thread_torreta) {
 	TipoTorreta torreta;
 	InicializaTorreta (&torreta);
 	while(1) {
 		delay(CLK_TRR);
-		ComprueboTorreta(&torreta);
+		if (estado==1)
+			ComprueboTorreta(&torreta);
 	}
 }
 
@@ -117,6 +110,7 @@ int main ()
 	// Configuracion e inicializacion del sistema
 	ConfiguraSistema (&player);
 	InicializaSistema ();
+	mqtt_init();
 
 	fsm_trans_t reproductor[] = {
 		{ WAIT_START, CompruebaStartDisparo, WAIT_NEXT, InicializaPlayDisparo },
@@ -134,7 +128,10 @@ int main ()
 	//Hilo de sonido (main)
 	next = millis();
 	while (1) {
-		fsm_fire (player_fsm);
+		if (estado==1)
+			fsm_fire (player_fsm);
+		if (modo==0)
+			digitalWrite (LASER_PIN, HIGH);
 		next += CLK_PLY;
 		delay_until (next);
 	}

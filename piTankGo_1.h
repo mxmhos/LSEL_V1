@@ -21,6 +21,7 @@
 #include "player.h"
 #include "torreta.h"
 #include "cliente.h"
+#include "mqtt.h"
 #include "piTankGoLib.h"
 
 // Posibles estados de las FSMs
@@ -43,6 +44,5 @@ int InicializaTorreta (TipoTorreta *p_torreta);
 // FUNCIONES LIGADAS A THREADS ADICIONALES
 //------------------------------------------------------
 PI_THREAD (thread_torreta);
-PI_THREAD (thread_recibe_datos);
 
 #endif /* _PITANKGO_1_H_ */

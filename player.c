@@ -98,7 +98,8 @@ void InicializaPlayDisparo (fsm_t* this)
 
 	InicializaPlayer (player);//se le pasa toda la estrucctura player
 	flags_player &= ~FLAG_START_DISPARO;//se deshabilita el flag de disparo
-	digitalWrite (LASER_PIN, HIGH);
+	if (modo==1)
+		digitalWrite (LASER_PIN, HIGH);
 }
 
 void InicializaPlayImpacto (fsm_t* this)
@@ -149,7 +150,8 @@ void ActualizaPlayer (fsm_t* this)
 void FinalEfecto (fsm_t* this)
 {
 	softToneWrite (PLAYER_PWM_PIN, NO_SONAR);//probar con softStop(int pin)
-	digitalWrite (LASER_PIN, LOW);
+	if (modo==1)
+		digitalWrite (LASER_PIN, LOW);
 	flags_player &= ~FLAG_PLAYER_END;//quitamos el flag de final de efecto
 }
 

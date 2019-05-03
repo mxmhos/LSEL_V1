@@ -85,12 +85,11 @@ while True:
 		y = int(sense.get_accelerometer_raw()['x']*50)
 		x = int(sense.get_accelerometer_raw()['y']*100)
 
-		if modo==1:
-			for event in sense.stick.get_events():
-				if event.action == "pressed":
-					if event.direction == "middle":
-						boton=1
-						client.publish(TOPIC_boton, "1")
+		for event in sense.stick.get_events():
+			if event.action == "pressed":
+				if event.direction == "middle":
+					boton=1
+					client.publish(TOPIC_boton, "1")
 
 		if (x>50):
 			posX=50
@@ -121,10 +120,11 @@ while True:
 
 		if boton==1:
 			boton=0
-			for i in range (0, 4):
-				sense.set_pixels(img1[i])
-				time.sleep(0.4)
-				sense.clear()
+			if modo==1:
+				for i in range (0, 4):
+					sense.set_pixels(img1[i])
+					time.sleep(0.4)
+					sense.clear()
 
 		if atino==1:
 			atino=0
