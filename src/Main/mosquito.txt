@@ -1,0 +1,2 @@
+mosquitto_pub -h localhost -t topos -m FUERA
+mosquitto_sub -h localhost -t topos
