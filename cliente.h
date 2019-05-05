@@ -10,8 +10,8 @@
 #include "piTankGoLib.h"
 #include "torreta.h"
 
-extern int flags_player;
 extern int estado;
+extern int efecto;
 extern int modo;
 extern TipoPosicionTorreta next_move;
 

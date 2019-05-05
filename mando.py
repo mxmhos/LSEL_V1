@@ -9,14 +9,14 @@ from sense_hat import SenseHat
 
 host = "192.168.1.202" # '172.16.2.3' #
 port = 1883
-TOPIC_estado = "MANDO/estado"
+TOPIC_estado = "JUEGO/CONTROL"
 TOPIC_posX = "MANDO/posicionX"
 TOPIC_posY = "MANDO/posicionY"
 TOPIC_boton = "MANDO/boton"
 TOPIC_num = "MANDO/numero"
 TOPIC_atino = "TOPO/sonido"
 TOPIC_rot = "MANDO/rot"
-TOPIC_modo = "MANDO/modo"
+TOPIC_modo = "JUEGO/modo"
 
 sense = SenseHat()
 pygame.mixer.init()
@@ -86,7 +86,6 @@ while True:
 		pygame.mixer.music.play()
 		estado=10
 	elif estado==10:
-		print(pygame.mixer.music.get_busy())
 		if (pygame.mixer.music.get_busy())==0:
 			pygame.mixer.music.load("Back.mp3")
 			pygame.mixer.music.play()

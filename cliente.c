@@ -1,4 +1,4 @@
-#include "mqtt.h"
+#include "cliente.h"
 #include "MQTTClient.h"
 
 #define ADDRESS    "192.168.1.202:1883" // "192.168.1.62:1883" // 
@@ -6,25 +6,28 @@
 #define QOS         1
 #define TIMEOUT     10000L
 
-#define TOPIC_estado "SERVO/estado"
-#define TOPIC_modo "SERVO/modo"
-#define TOPIC_atino "SERVO/atino"
+#define TOPIC_estado "JUEGO/CONTROL"
+#define TOPIC_modo "JUEGO/modo"
+#define TOPIC_atino "TOPO/sonido"
 #define TOPIC_posX "MANDO/posicionX"
 #define TOPIC_posY "MANDO/posicionY"
 #define TOPIC_boton "MANDO/boton"
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-	if (strcmp(topicName, "SERVO/estado")==0) {
-		estado = atoi(message->payload);
+	if (strcmp(topicName, "JUEGO/CONTROL")==0) {
+		if (atoi(message->payload)==1)
+			estado=1;
+		else
+			estado=0;
 		printf("Recibo estado: %d\n",estado);
 		}
-	else if (strcmp(topicName, "SERVO/modo")==0) {
+	else if (strcmp(topicName, "JUEGO/modo")==0) {
 		modo = atoi(message->payload);
 		printf("Recibo modo: %d\n",estado);
 		}
-	else if (strcmp(topicName, "SERVO/atino")==0) {
+	else if (strcmp(topicName, "TOPO/sonido")==0) {
 		if (atoi(message->payload)==1)
-			flags_player |= FLAG_START_IMPACTO;
+			efecto=2;
 		printf("Recibo atino\n");
 		}
 	else if (strcmp(topicName, "MANDO/posicionX")==0) {
@@ -37,13 +40,13 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 		}
 	else if (strcmp(topicName, "MANDO/boton")==0) {
 		if (atoi(message->payload)==1)
-			flags_player |= FLAG_START_DISPARO;
+			efecto=1;
 		printf("Recibo boton\n");
 		}
 	printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
 
 	MQTTClient_free(topicName);
-	MQTTClient_freeMessage(message);
+	MQTTClient_freeMessage(&message);
 	return 1;
 }
 

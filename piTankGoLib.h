@@ -4,18 +4,11 @@
 
 #include <stdio.h>
 
-#include "fsm.h"
 #include "tmr.h"
 #include "torreta.h"
 
-#define CLK_PLY 20
-#define CLK_COMMS 300
-#define CLK_TRR 10
-#define CLK_MAIN 1000
-
-// DIRECCION DE SERVER
-#define host  "172.16.2.3" // "192.168.1.202" // 
-#define puerto	8080
+#define CLK_MAIN 10
+#define DURACION_LASER 1500
 
 // VALORES DE CONFIGURACION SERVER
 #define SYSCLK 19200	//19.2MHz = 19200kHz
@@ -35,20 +28,9 @@
 // Distribucion de pines GPIO empleada para el enlace LASER
 #define	LASER_PIN		4
 
-// Distribucion de pines GPIO empleada para la reproducción de efectos
-#define PLAYER_PWM_PIN 24 	//GPIO18
-#define NO_SONAR 0 		//frecuencia de 0Hz
-
 // Distribucion de pines GPIO empleada para el control de los servos
 #define	SERVO_VERTICAL_PIN	0
 #define	SERVO_HORIZONTAL_PIN	0
-
-// FLAGS FSM REPRODUCCION DE EFECTOS DE SONIDO
-#define FLAG_START_DISPARO 		0x01
-#define FLAG_START_IMPACTO 		0x02
-#define FLAG_PLAYER_END			0x04
-#define FLAG_NOTA_TIMEOUT		0x08
-#define FLAG_GAME_END 			0x10
 
 
 #endif /* _PITANKGOLIB_H_ */

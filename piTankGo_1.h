@@ -11,38 +11,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <wiringPi.h>
-#include <softTone.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "player.h"
+#include "tmr.h"
 #include "torreta.h"
 #include "cliente.h"
-#include "mqtt.h"
 #include "piTankGoLib.h"
-
-// Posibles estados de las FSMs
-enum fsm_state {
-	WAIT_START,
-	WAIT_NEXT,
-	WAIT_END,
-	GAME_END,
-};
-
 
 //------------------------------------------------------
 // FUNCIONES DE CONFIGURACION/INICIALIZACION
 //------------------------------------------------------
-int ConfiguraSistema (TipoPlayer *p_sistema);
+int ConfiguraSistema ();
 int InicializaSistema ();
 int InicializaTorreta (TipoTorreta *p_torreta);
-
-//------------------------------------------------------
-// FUNCIONES LIGADAS A THREADS ADICIONALES
-//------------------------------------------------------
-PI_THREAD (thread_torreta);
+void timer_laser_duracion_disparo_isr (union sigval value);
 
 #endif /* _PITANKGO_1_H_ */
