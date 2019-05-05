@@ -148,10 +148,6 @@ void f_preparado(){
 
 void analizar_msg(char *destino){
 	
-	//int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
-	//char c[MSG_MAX];
-	//int longitud;
-	
 	printf("Mensaje nuevo\n");
 	printf("\tCanal: %s\n", canal_rcv);
 	printf("\tMensaje: %s\n",msg_rcv);
@@ -160,21 +156,6 @@ void analizar_msg(char *destino){
 		flag |= TOPO_ATINO;
 		printf("[TOPO] Has atinado!\n");
 	}
-	
-	/*for ( int i =0; i < n_canales; i++){
-		canal(c, CANALRAIZ, sub_canal[i] ); //Busco en todos los subcanales
-		longitud = strlen(c);
-		if( !strncmp(destino, c, longitud) ){
-			switch(i){
-				case PUB_CONTROL: //Si es un mensaje a control (De momento, /JUEGO/CONTROL/TOPO)
-					topo1.acierto = SI;
-					flag |= TOPO_ATINO;
-					printf("[TOPO] Has atinado!\n");
-					//printf("[TOPO]%s-%d-%d-%d-%d\n", topo1.id, topo1.estado, topo1.acierto, topo1.t_on, topo1.t_off);
-				break;
-			}
-		}
-	}*/
 	
 	mqtt_flag &= !NEW_MSG;
 	
@@ -187,7 +168,6 @@ void f_juego(){
 	
 	if ((flag & PARAR) == PARAR){
 		
-		//canal(c, CANALRAIZ, pub_canal[PUB_CONTROL] );
 		mqtt_publicar(cliente, CONTROL, MSG_CONTROL_STOP);
 		
 		est = Inicio;
@@ -201,12 +181,8 @@ void f_juego(){
 		if (segundos == 1){
 			accion = f_topo(&topo1);
 			if (accion == TOPO_SALIR){
-				//canal(c, CANALRAIZ, pub_canal[PUB_TOPO_SERVO] );
-				//mqtt_publicar(cliente, c, MSG_TOPO_FUERA);
 				mqtt_publicar(cliente, TOPO_SERVO, MSG_TOPO_FUERA);
 			}else if (accion == TOPO_ESCONDERSE){
-				//canal(c, CANALRAIZ, pub_canal[PUB_TOPO_SERVO] );
-				//mqtt_publicar(cliente, c, MSG_TOPO_DENTRO);
 				mqtt_publicar(cliente, TOPO_SERVO, MSG_TOPO_DENTRO);
 			}
 			
@@ -222,8 +198,6 @@ void f_juego(){
 			topo1.acierto = SI;
 			
 			printf("Qedan %d topos vivos\n",puntuacion);
-			//canal(c, CANALRAIZ, pub_canal[PUB_MANDO] );
-			//mqtt_publicar(cliente, c, MSG_ATINO);
 			sprintf(aux, "%d", puntuacion);
 			mqtt_publicar(cliente, MANDO, aux);
 			flag &= ~TOPO_ATINO;
@@ -259,7 +233,7 @@ void f_fin(){
 
 int main(void){
 	
-	int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
+	//int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
 	//char c[MSG_MAX];
 	
 	pthread_t id_teclado;
@@ -276,21 +250,12 @@ int main(void){
 	}
 	
 	printf("Te has suscrito a %d canales:\n", n_canales);
-	/*for ( int i =0; i < n_canales; i++){
-		canal(c, CANALRAIZ, sub_canal[i] );
-		//canal(c, c, "#" ); // '#' en MQTT sirve para suscribirse a todos los subcanales
-		suscribirse(&cliente, c);
-		printf("\t%s\n", c);
-	}*/
 	suscribirse(&cliente, "sonido");
 	printf("\t%s\n", "sonido");
-	
-	//printf("Llego hasta aqui\n");
 	
 	while(tecla != 'q'){
 		switch(est){
 			case Inicio:
-			//¿Hacemos comprobacion de que existe, al menos, una torreta y un topo antes de iniciar? --> Puede ser una mejora para el porx hito
 				f_inicio();
 			break;
 			case Preparado:
