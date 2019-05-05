@@ -14,7 +14,7 @@ TOPIC_posX = "MANDO/posicionX"
 TOPIC_posY = "MANDO/posicionY"
 TOPIC_boton = "MANDO/boton"
 TOPIC_num = "MANDO/numero"
-TOPIC_atino = "MANDO/atino"
+TOPIC_atino = "TOPO/sonido"
 TOPIC_modo = "MANDO/modo"
 TOPIC_rot = "MANDO/rot"
 
@@ -73,16 +73,15 @@ while remain:
 			elif cod == 'n':
 				if ((int(lista[1])>=-1) and (int(lista[1])<=9)):
 					client.publish(TOPIC_num, lista[1])
+			elif cod == 'e':
+				if ((int(lista[1])>=0) and (int(lista[1])<=4)):
+					client.publish(TOPIC_estado, lista[1])
 			if teclado.strip() == 'a':
 				client.publish(TOPIC_atino, "1")	
 			elif teclado.strip() == 'md':
 				client.publish(TOPIC_modo, "1")
 			elif teclado.strip() == 'mf':
 				client.publish(TOPIC_modo, "0")
-			elif teclado.strip() == 'on':
-				client.publish(TOPIC_estado, "1")
-			elif teclado.strip() == 'off':
-				client.publish(TOPIC_estado, "0")
 			elif teclado.strip() == 'q':
 				remain = 0
 

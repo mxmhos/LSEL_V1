@@ -1,5 +1,6 @@
 import socket
 import sys
+import pygame
 import time
 import paho.mqtt.client as mqtt
 import paho.mqtt.publish as publish
@@ -13,11 +14,12 @@ TOPIC_posX = "MANDO/posicionX"
 TOPIC_posY = "MANDO/posicionY"
 TOPIC_boton = "MANDO/boton"
 TOPIC_num = "MANDO/numero"
-TOPIC_atino = "MANDO/atino"
+TOPIC_atino = "TOPO/sonido"
 TOPIC_rot = "MANDO/rot"
 TOPIC_modo = "MANDO/modo"
 
 sense = SenseHat()
+pygame.mixer.init()
 sense.rotation = 90
 R = [255, 0, 0] #Red
 W = [255, 255, 255] # White
@@ -80,8 +82,14 @@ client.subscribe(TOPIC_modo)
 while True:
 	if estado==1:
 		sense.show_message("Bienvenido", text_colour=[255, 0, 0])
-		estado=2
-	elif estado==2:
+		pygame.mixer.music.load("Back.mp3")
+		pygame.mixer.music.play()
+		estado=10
+	elif estado==10:
+		print(pygame.mixer.music.get_busy())
+		if (pygame.mixer.music.get_busy())==0:
+			pygame.mixer.music.load("Back.mp3")
+			pygame.mixer.music.play()
 		y = int(sense.get_accelerometer_raw()['x']*50)
 		x = int(sense.get_accelerometer_raw()['y']*100)
 
@@ -114,13 +122,14 @@ while True:
 		sense.clear()
 		if num>0:
 			sense.show_letter(str(num), text_colour=[255, 0, 0])
-		elif num==-1:
-			sense.show_message("You WIN", text_colour=[255, 0, 0])
-			num=0
 
 		if boton==1:
 			boton=0
 			if modo==1:
+				#efecto = pygame.mixer.Sound("Laser_Gun.mp3")
+				#efecto.play()
+				pygame.mixer.music.load("Laser_Gun.mp3")
+				pygame.mixer.music.play()
 				for i in range (0, 4):
 					sense.set_pixels(img1[i])
 					time.sleep(0.4)
@@ -128,12 +137,33 @@ while True:
 
 		if atino==1:
 			atino=0
+			#efecto = pygame.mixer.Sound("Explosion.mp3")
+			#efecto.play()
+			pygame.mixer.music.load("Explosion.mp3")
+			pygame.mixer.music.play()
 			print("Entro en atino")
 			for i in range (0, 4):
 				sense.set_pixels(img2[i])
 				time.sleep(0.15)
 				sense.clear()
+
+	elif estado==2:
+		pygame.mixer.stop
+		sense.show_message("Fin Partida", text_colour=[255, 0, 0])
+		estado=-1
+
+	elif estado==3:
+		pygame.mixer.stop
+		sense.show_message("You WIN", text_colour=[255, 0, 0])
+		estado==-1
+
+	elif estado==4:
+		pygame.mixer.stop
+		sense.show_message("You LOSE", text_colour=[255, 0, 0])
+		estado==-1
+
 	elif estado==0:
+		pygame.mixer.stop
 		sense.show_message("Chau!!!...", text_colour=[255, 0, 0])
 		estado=-1
 	time.sleep(.1)
