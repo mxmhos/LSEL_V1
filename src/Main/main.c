@@ -16,35 +16,35 @@
 #define MSG_MAX	25
 
 //Definicion de flags
-#define INICIO							0x01
-#define FIN								0x02
+#define INICIO						0x01
+#define FIN							0x02
 #define PARAR						0x04
 #define TOPO_ATINO			0x08
 
 //Subcanales
 #define TOPO_SERVO		"topos"
 #define TOPO_SENSOR	"sonido"
-#define MANDO					"MANDO/atino"
-#define CONTROL				"JUEGO/CONTROL"
+#define MANDO				"MANDO/Numero"
+#define CONTROL			"JUEGO/CONTROL"
 
 //Subcanales -> Posicion en el array canal de subcripciones
 #define SUB_TOPO_SENSOR		0
 
 
 //Subcanales -> Posicion en el array canal de publicaciones
-#define PUB_CONTROL				0
-#define PUB_MANDO					1
+#define PUB_CONTROL			0
+#define PUB_MANDO				1
 #define PUB_TOPO_SERVO		2
 
 //Posicion en la cadena de mensajes a publicar
 #define MSG_CONTROL_START		"0"
-#define MSG_CONTROL_STOP			"1"
-#define MSG_CONTROL_FIN				"2"
-#define MSG_CONTROL_WIN				"3"
-#define MSG_CONTROL_LOSE			"4"
+#define MSG_CONTROL_STOP		"1"
+#define MSG_CONTROL_FIN			"2"
+#define MSG_CONTROL_WIN			"3"
+#define MSG_CONTROL_LOSE		"4"
 #define MSG_TOPO_DENTRO			"0"
-#define MSG_TOPO_FUERA				"1"
-#define MSG_ATINO								"1"
+#define MSG_TOPO_FUERA			"1"
+#define MSG_ATINO							"1"
 
 //Tiempo espera 500 ms
 #define T_500_MS 500000
@@ -233,7 +233,7 @@ void f_fin(){
 
 int main(void){
 	
-	//int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
+	int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
 	//char c[MSG_MAX];
 	
 	pthread_t id_teclado;
