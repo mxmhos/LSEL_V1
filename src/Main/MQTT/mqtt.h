@@ -15,9 +15,9 @@
 
 
 //Variables globales
-char mqtt_flag;
-char msg_rcv[MSG_MAX];
-char canal_rcv[MSG_MAX];
+extern char mqtt_flag;
+extern char msg_rcv[MSG_MAX];
+extern char canal_rcv[MSG_MAX];
 
 // Funciones
 int mqtt_connect_pub(MQTTClient* client, char *addr, char *id); //Conectarse solo en modo publicador

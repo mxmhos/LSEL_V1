@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g
 
 all:main.c
-	$(CC) $(CFLAGS) -o main main.c MQTT/mqtt.c -pthread -lpaho-mqtt3cs
+	$(CC) $(CFLAGS) -o main main.c MQTT/mqtt.c topo/topo.c -pthread -lpaho-mqtt3cs
 
 
 clean:
