@@ -66,7 +66,7 @@ char mqtt_flag;
 char msg_rcv[MSG_MAX];
 char canal_rcv[MSG_MAX];
 
-typedef enum{Inicio, Juego, Fin} estado;
+typedef enum{Inicio, Preparado, Juego, Fin} estado;
 estado est = Inicio;
 
 topo topo1; //Creo un topo
@@ -76,13 +76,21 @@ const char *pub_canal[] = {CONTROL, MANDO, TOPO_SERVO}; //Canales en los que pub
 
 void canal(char *resultado, char *cadena1, const char *cadena2){sprintf(resultado,"%s/%s", cadena1, cadena2);}
 
-void *teclado(void *arg) {
+void menu(){
 	
-	printf("Whac a Mole!\n");
+	printf("\t***********************************\n");
+	printf("\t             Whac a Mole!          \n");
+	printf("\t***********************************\n");
+	printf("\n");
 	printf("Menu inicio:\n");
 	printf("\t-Presione la tecla 's' para iniciar una partida\n");
 	printf("\t-Presione la tecla 'p' para salir de la partida\n");
 	printf("\t-Presione la tecla 'q' para salir del juego\n");
+	printf("\nPulse una tecla: \n");
+	
+}
+
+void *teclado(void *arg) {
 	
 	while (tecla != 'q'){
 		
@@ -115,13 +123,25 @@ void *temporizador(void *arg) { //Activa un flag cada vez que pasa 1 segundo
 void f_inicio(){
 	//char c[MSG_MAX];
 	
+	menu();
+	
+	//Inicializamos todas las variables
+	flag = 0x00;
+	segundos = 0;
+	puntuacion = PTOS_MAX;
+	cuantaatras = T_PARTIDA;
+	
+	//Todo listo para empezar
+	est = Preparado;
+	
+}
+
+void f_preparado(){
+	
 	if ((flag &= INICIO) == INICIO){
 		printf ("Juego iniciado\n");
-		//canal(c, CANALRAIZ, pub_canal[PUB_CONTROL] );
 		mqtt_publicar(cliente, CONTROL, MSG_CONTROL_START);
-		//flag &= !(INICIO);
-		flag = 0x00; //Reseto flags para eliminar cualquier otro flag que se haya acivado
-		segundos = 0;
+		flag &= ~INICIO;
 		est = Juego;
 	}
 }
@@ -214,13 +234,13 @@ void f_juego(){
 		if ((puntuacion == 0) && (cuantaatras > 0)){
 			printf("\t***********************************\n");
 			printf("\t             YOU WIN          \n");
-			printf("\t***********************************\n");
+			printf("\t***********************************\n\n");
 			mqtt_publicar(cliente, CONTROL, MSG_CONTROL_WIN);
 			est = Inicio;
 		}else if ((puntuacion > 0) && (cuantaatras == 0)){
 			printf("\t***********************************\n");
 			printf("\t             YOU LOSE!          \n");
-			printf("\t***********************************\n");
+			printf("\t***********************************\n\n");
 			mqtt_publicar(cliente, CONTROL, MSG_CONTROL_LOSE);
 			est = Inicio;
 		}
@@ -250,8 +270,6 @@ int main(void){
 	
 	crear_topo(&topo1);
 	
-	puntuacion = PTOS_MAX;
-	
 	if (mqtt_connect(&cliente, ADDR, ID) != OK){
 		printf("Error al establecer la conexion\n");
 		exit(0);
@@ -274,6 +292,9 @@ int main(void){
 			case Inicio:
 			//¿Hacemos comprobacion de que existe, al menos, una torreta y un topo antes de iniciar? --> Puede ser una mejora para el porx hito
 				f_inicio();
+			break;
+			case Preparado:
+				f_preparado();
 			break;
 			case Juego:
 				f_juego();
