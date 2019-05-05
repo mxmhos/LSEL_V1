@@ -86,10 +86,10 @@ void desconectar (MQTTClient* client){
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message)
 {
-	printf("Ha llegado un mensaje nuevo\n");
+	//printf("Ha llegado un mensaje nuevo\n");
     int longitud = message->payloadlen;
     //char mensaje[longitud];
-	
+	//printf("Longitud = %d\n", longitud);
 	strncpy(msg_rcv, message->payload, longitud);
 	strcpy(canal_rcv, topicName);
 	
@@ -103,7 +103,7 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 }
 
 void delivered(void *context, MQTTClient_deliveryToken dt){
-	printf("Message with token value %d delivery confirmed\n", dt);
+	//printf("Message with token value %d delivery confirmed\n", dt);
     deliveredtoken = dt;
 	mqtt_flag = MSG_DELIVERED;
 }

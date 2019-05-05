@@ -46,7 +46,7 @@ int f_topo(topo *topo){
 		break;
 	}
 	
-	printf("[TOPO]%s-%d-%d-%d-%d\n", topo->id, topo->estado, topo->acierto, topo->t_on, topo->t_off);
+	//printf("[TOPO]%s-%d-%d-%d-%d\n", topo->id, topo->estado, topo->acierto, topo->t_on, topo->t_off);
 	
 	return accion;
 	
