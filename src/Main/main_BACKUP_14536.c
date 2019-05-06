@@ -66,13 +66,13 @@ char mqtt_flag;
 char msg_rcv[MSG_MAX];
 char canal_rcv[MSG_MAX];
 
-
+<<<<<<< HEAD
 int acabarPrograma = 0;
 
 typedef enum{Inicio, Juego, Fin} estado;
-
+=======
 typedef enum{Inicio, Preparado, Juego, Fin} estado;
-
+>>>>>>> main
 estado est = Inicio;
 
 topo topo1; //Creo un topo
@@ -82,7 +82,7 @@ const char *pub_canal[] = {CONTROL, MANDO, TOPO_SERVO}; //Canales en los que pub
 
 void canal(char *resultado, char *cadena1, const char *cadena2){sprintf(resultado,"%s/%s", cadena1, cadena2);}
 
-
+<<<<<<< HEAD
 void *teclado(void *arg) {
     
     printf("Whac a Mole!\n");
@@ -108,7 +108,7 @@ void *teclado(void *arg) {
         }
     }
     return 0;
-
+=======
 void menu(){
 	
 	printf("\t***********************************\n");
@@ -142,7 +142,7 @@ void *teclado(void *arg) {
 		}
 	}
 	return 0;
-
+>>>>>>> main
 }
 
 void *temporizador(void *arg) { //Activa un flag cada vez que pasa 1 segundo
@@ -155,7 +155,7 @@ void *temporizador(void *arg) { //Activa un flag cada vez que pasa 1 segundo
 }
 
 void f_inicio(){
-
+<<<<<<< HEAD
     //char c[MSG_MAX];
     
     if ((flag & INICIO) == INICIO){
@@ -270,7 +270,7 @@ void f_juego(){
         
         segundos = 0;
     }
-
+=======
 	//char c[MSG_MAX];
 	
 	menu();
@@ -371,7 +371,7 @@ void f_juego(){
 		
 		segundos = 0;
 	}
-
+>>>>>>> main
 }
 
 void f_fin(){
@@ -384,24 +384,24 @@ void f_fin(){
 
 
 int main(void){
-
+<<<<<<< HEAD
     
     int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
     //char c[MSG_MAX];
     
     pthread_t id_teclado;
-
+=======
 	
 	//int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
 	//char c[MSG_MAX];
 	
 	pthread_t id_teclado;
-
+>>>>>>> main
     pthread_create(&id_teclado, NULL, teclado, NULL); 
     
     pthread_t id_temporizador;
     pthread_create(&id_temporizador, NULL, temporizador, NULL); 
-
+<<<<<<< HEAD
     
     crear_topo(&topo1);
     
@@ -443,5 +443,41 @@ int main(void){
     }
     
     return 0;
- 
+    
+=======
+	
+	crear_topo(&topo1);
+	
+	if (mqtt_connect(&cliente, ADDR, ID) != OK){
+		printf("Error al establecer la conexion\n");
+		exit(0);
+	}
+	
+	printf("Te has suscrito a %d canales:\n", n_canales);
+	suscribirse(&cliente, "sonido");
+	printf("\t%s\n", "sonido");
+	
+	while(tecla != 'q'){
+		switch(est){
+			case Inicio:
+				f_inicio();
+			break;
+			case Preparado:
+				f_preparado();
+			break;
+			case Juego:
+				f_juego();
+			break;
+			case Fin:
+				f_fin();
+			break;
+		}
+		//printf("Estado: %d\n", est);
+		usleep(T_500_MS); //esperamos 500 ms entre cada transicion
+			
+	}
+	
+	return 0;
+	
+>>>>>>> main
 }
