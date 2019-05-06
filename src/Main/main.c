@@ -272,7 +272,7 @@ int main(void){
     
     //printf("Llego hasta aqui\n");
     
-    while(acabarPrograma){
+    while(!acabarPrograma){
         switch(est){
             case Inicio:
             //¿Hacemos comprobacion de que existe, al menos, una torreta y un topo antes de iniciar? --> Puede ser una mejora para el porx hito
