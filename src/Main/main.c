@@ -9,7 +9,7 @@
 
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.1.11"
+#define ADDR			"172.16.2.4"
 #define ID					"Control"
 #define CANALRAIZ	"JUEGO"
 #define MICANAL		"JUEGO/CONTROL"
@@ -22,8 +22,8 @@
 #define TOPO_ATINO			0x08
 
 //Subcanales
-#define TOPO_SERVO		"topos"
-#define TOPO_SENSOR	"sonido"
+#define TOPO_SERVO		"TOPO/topo1"
+#define TOPO_SENSOR	"TOPO/sonido"
 #define MANDO				"MANDO/Numero"
 #define CONTROL			"JUEGO/CONTROL"
 
@@ -37,8 +37,8 @@
 #define PUB_TOPO_SERVO		2
 
 //Posicion en la cadena de mensajes a publicar
-#define MSG_CONTROL_START		"0"
-#define MSG_CONTROL_STOP		"1"
+#define MSG_CONTROL_START		"1"
+#define MSG_CONTROL_STOP		"0"
 #define MSG_CONTROL_FIN			"2"
 #define MSG_CONTROL_WIN			"3"
 #define MSG_CONTROL_LOSE		"4"
@@ -65,6 +65,8 @@ MQTTClient cliente;
 char mqtt_flag;
 char msg_rcv[MSG_MAX];
 char canal_rcv[MSG_MAX];
+
+int acabar_partida = 0;
 
 typedef enum{Inicio, Preparado, Juego, Fin} estado;
 estado est = Inicio;
@@ -227,6 +229,8 @@ void f_fin(){
 	//char c[MSG_MAX];
 	//canal(c, CANALRAIZ, pub_canal[PUB_CONTROL] );
 	mqtt_publicar(cliente, CONTROL, MSG_CONTROL_FIN);
+	mqtt_publicar(cliente, TOPO_SERVO, MSG_TOPO_DENTRO);
+	acabar_partida = 1;
 };
 
 
@@ -253,7 +257,7 @@ int main(void){
 	suscribirse(&cliente, "sonido");
 	printf("\t%s\n", "sonido");
 	
-	while(tecla != 'q'){
+	while(!acabar_partida){
 		switch(est){
 			case Inicio:
 				f_inicio();
