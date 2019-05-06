@@ -9,8 +9,8 @@
 
 #define QOS             1
 #define TIMEOUT     10000L
-#define ADDR            "192.168.1.11"
-#define ID                  "Control"
+#define ADDR        "172.16.2.3"
+#define ID          "Control"
 #define CANALRAIZ   "JUEGO"
 #define MICANAL     "JUEGO/CONTROL"
 #define MSG_MAX 25
@@ -22,9 +22,9 @@
 #define TOPO_ATINO                  0x08
 
 //Subcanales
-#define TOPO_SERVO      "topos"
-#define TOPO_SENSOR     "sonido"
-#define MANDO           "MANDO/atino"
+#define TOPO_SERVO      "TOPO/topo1"
+#define TOPO_SENSOR     "TOPO/sonido"
+#define MANDO           "MANDO/numero"
 #define CONTROL         "JUEGO/CONTROL"
 
 //Subcanales -> Posicion en el array canal de subcripciones
@@ -37,8 +37,8 @@
 #define PUB_TOPO_SERVO      2
 
 //Posicion en la cadena de mensajes a publicar
-#define MSG_CONTROL_START           "0"
-#define MSG_CONTROL_STOP            "1"
+#define MSG_CONTROL_START           "1"
+#define MSG_CONTROL_STOP            "0"
 #define MSG_CONTROL_FIN             "2"
 #define MSG_CONTROL_WIN             "3"
 #define MSG_CONTROL_LOSE            "4"
@@ -207,7 +207,7 @@ void f_juego(){
             //canal(c, CANALRAIZ, pub_canal[PUB_MANDO] );
             //mqtt_publicar(cliente, c, MSG_ATINO);
             sprintf(aux, "%d", puntuacion);
-            mqtt_publicar(cliente, MANDO, aux);
+            mqtt_publicar(cliente, MANDO, "5");
             flag &= ~TOPO_ATINO;
             
         }
@@ -267,8 +267,8 @@ int main(void){
         suscribirse(&cliente, c);
         printf("\t%s\n", c);
     }*/
-    suscribirse(&cliente, "sonido");
-    printf("\t%s\n", "sonido");
+    suscribirse(&cliente, TOPO_SENSOR);
+    printf("\t%s\n", TOPO_SENSOR);
     
     //printf("Llego hasta aqui\n");
     
@@ -286,8 +286,7 @@ int main(void){
             break;
         }
         //printf("Estado: %d\n", est);
-        usleep(T_500_MS); //esperamos 500 ms entre cada transicion
-            
+        usleep(T_500_MS); //esperamos 500 ms entre cada transicion       
     }
     
     return 0;
