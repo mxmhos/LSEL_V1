@@ -23,20 +23,23 @@
 
 #define PHOTO_RCV 2
 #define MV_TOPO 0
+#define ON 1
+#define OFF 0
 
-//const char* ssid = "Especial_MCHP";
-//const char* password = "M15SEB304";
-//const char* mqtt_server = "192.168.1.202";//ip de donde se encuentra alojado el servidor
+const char* ssid = "Especial_MCHP";
+const char* password = "M15SEB304";
+const char* mqtt_server = "172.16.2.4";//ip de donde se encuentra alojado el servidor
 
-const char* ssid = "lsel";
+/*const char* ssid = "lsel";
 const char* password = "123456789";
-const char* mqtt_server = "192.168.43.148";//ip de donde se encuentra alojado el servidor
+const char* mqtt_server = "192.168.43.148";//ip de donde se encuentra alojado el servidor*/
 
 const int port = 1883;
 
 long lastMsg = 0;
 char msg[50];
 int value = 0;
+int estado = OFF;
 int shoot_rcv = 0;
 Servo servo;
 
@@ -52,8 +55,8 @@ void shoot();
 void setup() {
   pinMode(PHOTO_RCV,INPUT);//Entrada del fototransistor PIN 2
   servo.attach(MV_TOPO,1000,2000);//PWM para el control del servo que mueve a los topos conectado al PIN 0
-  attachInterrupt(PHOTO_RCV,shoot,FALLING); // Interrupcion con el flanco de bajada  
-  Serial.begin(115200);  
+  servo.writeMicroseconds(1000);
+  attachInterrupt(PHOTO_RCV,shoot,FALLING); // Interrupcion con el flanco de bajada   
   setup_wifi();
   client.setServer(mqtt_server, port);
   client.setCallback(callback);
@@ -65,51 +68,39 @@ void loop() {
     reconnect();
   }
   client.loop();//Mantiene la sesion con el servidor MQTT
-  if (shoot_rcv) {
+  if ((shoot_rcv == 1) && (estado == ON)) {
     /*snprintf (msg, 75, "hello world #%ld", value);
     Serial.print("Publish message: ");
     Serial.println(msg);*/
-    client.publish("sonido", "1");
+    estado = OFF;
+    client.publish("TOPO/sonido", "1");
+    servo.writeMicroseconds(1000);//servo.write(0);
     shoot_rcv = 0;
   }
+
 }
 void setup_wifi() {
 
   delay(100);
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
 
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
-    Serial.print(".");
   }
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
   
-  // Switch on the LED if an 1 was received as first character
   if ((char)payload[0] == '1') {
-    digitalWrite(1, LOW);   // Turn the LED on (Note that LOW is the voltage level
-    // but actually the LED is on; this is because
-    // it is acive low on the ESP-01)
-  } else {
-    digitalWrite(1, HIGH);  // Turn the LED off by making the voltage HIGH
+    estado = ON;
+    servo.writeMicroseconds(2000);
+    attachInterrupt(PHOTO_RCV,shoot,FALLING);
+    //servo.write(180);   // Topo Sale
+  } else if((char)payload[0] == '0') {
+    estado = OFF;
+    servo.writeMicroseconds(1000);//servo.write(0);  // Topo entra
   }
 
 }
@@ -117,18 +108,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("topos1", "5");
       // ... and resubscribe
-      client.subscribe("topos/");
+      client.subscribe("TOPO/topo1");
     } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
     }
@@ -136,6 +120,7 @@ void reconnect() {
 }
 
 void shoot(){
+  detachInterrupt(digitalPinToInterrupt(PHOTO_RCV));
   shoot_rcv = 1;
 }
 
