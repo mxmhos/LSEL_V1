@@ -21,8 +21,10 @@
 #include <PubSubClient.h>
 #include <Servo.h>
 
-#define PHOTO_RCV 2
-#define MV_TOPO 0
+#define R 0
+#define G 1
+#define B 2
+
 #define ON 1
 #define OFF 0
 
@@ -46,81 +48,33 @@ Servo servo;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-void callback(char* topic, byte* payload, unsigned int length);
-void setup_wifi();
-void reconnect();
-void shoot();
+
 
 //Una vez implementado correctamente en el ESP hay que borrar la comunicacion serial
 void setup() {
-  pinMode(PHOTO_RCV,INPUT);//Entrada del fototransistor PIN 2
-  servo.attach(MV_TOPO,1000,2000);//PWM para el control del servo que mueve a los topos conectado al PIN 0
-  servo.writeMicroseconds(1000);
-  attachInterrupt(PHOTO_RCV,shoot,FALLING); // Interrupcion con el flanco de bajada   
-  setup_wifi();
+  servo.attach(R);//PWM para el control del servo que mueve a los topos conectado al PIN 0
+  servo.writeMicroseconds(0);
+
   client.setServer(mqtt_server, port);
   client.setCallback(callback);
 }
 
 void loop() {
 
-  if (!client.connected()) {
+  /*if (!client.connected()) {
     reconnect();
-  }
-  client.loop();//Mantiene la sesion con el servidor MQTT
-  if ((shoot_rcv == 1) && (estado == ON)) {
-    /*snprintf (msg, 75, "hello world #%ld", value);
-    Serial.print("Publish message: ");
-    Serial.println(msg);*/
-    estado = OFF;
-    client.publish("TOPO/sonido", "1");
-    servo.writeMicroseconds(1000);//servo.write(0);
-    shoot_rcv = 0;
-  }
+  }*/
 
-}
-void setup_wifi() {
-
-  delay(100);
-  // We start by connecting to a WiFi network
-
-  WiFi.begin(ssid, password);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-  }
-}
-
-void callback(char* topic, byte* payload, unsigned int length) {
-  
-  if ((char)payload[0] == '1') {
-    estado = ON;
-    servo.writeMicroseconds(2000);
-    attachInterrupt(PHOTO_RCV,shoot,FALLING);
-    //servo.write(180);   // Topo Sale
-  } else if((char)payload[0] == '0') {
-    estado = OFF;
-    servo.writeMicroseconds(1000);//servo.write(0);  // Topo entra
+    servo.writeMicroseconds(0);//servo.write(0);
+    
   }
 
 }
 
-void reconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    // Attempt to connect
-    if (client.connect("ESP8266Client")) {
-      // ... and resubscribe
-      client.subscribe("TOPO/topo1");
-    } else {
-      // Wait 5 seconds before retrying
-      delay(5000);
-    }
-  }
-}
 
-void shoot(){
-  detachInterrupt(digitalPinToInterrupt(PHOTO_RCV));
-  shoot_rcv = 1;
-}
+
+
+
+
+
 
