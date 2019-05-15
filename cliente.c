@@ -1,7 +1,7 @@
 #include "cliente.h"
 #include "MQTTClient.h"
 
-#define ADDRESS    "192.168.1.202:1883" // "192.168.1.62:1883" // 
+#define ADDRESS    "172.16.2.4:1883" //  "192.168.1.202:1883" //
 #define CLIENTID    "servos"
 #define QOS         1
 #define TIMEOUT     10000L
@@ -12,6 +12,7 @@
 #define TOPIC_posX "MANDO/posicionX"
 #define TOPIC_posY "MANDO/posicionY"
 #define TOPIC_boton "MANDO/boton"
+#define TOPIC_android "android"
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
 	if (strcmp(topicName, "JUEGO/CONTROL")==0) {
@@ -20,30 +21,28 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 		else
 			estado=0;
 		printf("Recibo estado: %d\n",estado);
-		}
+	}
 	else if (strcmp(topicName, "JUEGO/modo")==0) {
 		modo = atoi(message->payload);
 		printf("Recibo modo: %d\n",estado);
-		}
+	}
 	else if (strcmp(topicName, "TOPO/sonido")==0) {
 		if (atoi(message->payload)==1)
 			efecto=2;
 		printf("Recibo atino\n");
-		}
-	else if (strcmp(topicName, "MANDO/posicionX")==0) {
-		next_move.x = atoi(message->payload);
-		printf("Recibo next_move.x\n");
-		}
-   	else if (strcmp(topicName, "MANDO/posicionY")==0) {
-		next_move.y = atoi(message->payload);
-		printf("Recibo next_move.y\n");
-		}
-	else if (strcmp(topicName, "MANDO/boton")==0) {
-		if (atoi(message->payload)==1)
-			efecto=1;
-		printf("Recibo boton\n");
-		}
-	printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
+	}
+	else if (strcmp(topicName, "android")==0) {
+		char *ptr = strtok(message->payload, " ");
+		boton = atoi(ptr);
+		ptr = strtok(NULL, " ");  
+		next_move.x=((P_MAX+P_MIN)/2) + atoi(ptr);
+		ptr = strtok(NULL, " ");
+		next_move.y=P_MIN+atoi(ptr);
+		printf("data:%s Boton:%d, x:%d, y:%d", message->payload, boton, next_move.x, next_move.y);
+
+		//printf("Recibo next_move.x\n");
+	}
+	//printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
 
 	MQTTClient_free(topicName);
 	MQTTClient_freeMessage(&message);
@@ -86,6 +85,8 @@ int mqtt_init() {
 	MQTTClient_subscribe(client, TOPIC_posX, QOS);
 	MQTTClient_subscribe(client, TOPIC_posY, QOS);
 	MQTTClient_subscribe(client, TOPIC_boton, QOS);
+	MQTTClient_subscribe(client, TOPIC_android, QOS);
+
 
 	return 0;
 }

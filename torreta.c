@@ -6,7 +6,7 @@
 //------------------------------------------------------
 int InicializaTorreta (TipoTorreta *p_torreta) {
 	int pos_ini_x = ((P_MAX+P_MIN)/2); // Posicion inicial en el punto medio -> 90º
-	int pos_ini_y = P_MAX; // Posicion inicial en el punto bajo
+	int pos_ini_y = P_MIN; // Posicion inicial en el punto bajo
 
 	// Configuro PWMs
 	pinMode(GPIO19, PWM_OUTPUT);

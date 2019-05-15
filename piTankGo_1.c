@@ -4,6 +4,7 @@
 int efecto;
 int estado;
 int modo;
+int boton;
 TipoPosicionTorreta next_move;
 
 tmr_t* timer_laser;
@@ -33,7 +34,7 @@ int InicializaSistema () {
 
 	//Inicializo variables gobales
 	estado=1;
-	modo=1;
+	modo=0;
 	efecto=0;
 
 	//Inicializo varaible next_move
@@ -90,6 +91,9 @@ int main ()
 			}	
 			if (modo==0)
 				digitalWrite (LASER_PIN, HIGH);
+		}
+		else {
+			digitalWrite (LASER_PIN, LOW);
 		}
 		next += CLK_MAIN;
 		delay_until (next);

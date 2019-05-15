@@ -13,6 +13,7 @@
 extern int estado;
 extern int efecto;
 extern int modo;
+extern int boton;
 extern TipoPosicionTorreta next_move;
 
 // Prototipos de funciones de entrada
