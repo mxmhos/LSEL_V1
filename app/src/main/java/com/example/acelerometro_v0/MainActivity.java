@@ -11,6 +11,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.widget.EditText;
 import android.widget.TextView;
 import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -34,13 +35,16 @@ public class MainActivity extends Activity implements SensorEventListener {
     private TextView text4;
     private String mTopic;
     private String mData;
+    private String ipAdr = "192.168.1.202";
+    private EditText edit;
 
     private int cnt=0;
     private int cont=0;
     private int boton=0;
+    private int modXY=0;
 
     private int yLast=0, yCont=0, xNext=0, yNext=0, xAct=0, yAct=0;
-    private int posX=0, posY=0, mart=0;
+    private int posX=0, posY=0;
 
     public MainActivity() {
 
@@ -51,7 +55,7 @@ public class MainActivity extends Activity implements SensorEventListener {
         MemoryPersistence memPer = new MemoryPersistence();
 
         final MqttAndroidClient client = new MqttAndroidClient(
-                getApplicationContext(), "tcp://172.16.2.4:1883", MqttClient.generateClientId(), memPer);
+                getApplicationContext(), "tcp://"+ipAdr+":1883", MqttClient.generateClientId(), memPer);
         try {
             client.connect(null, new IMqttActionListener() {
 
@@ -100,50 +104,50 @@ public class MainActivity extends Activity implements SensorEventListener {
         text1x.setText(Integer.toString(xAct));
         text1y.setText(Integer.toString(yAct));
 
-        if (xAct>70){ xAct=15; } else
-        if (xAct>60){ xAct=10; } else
-        if (xAct>50){ xAct=7; } else
-        if (xAct>40){ xAct=5; } else
-        if (xAct>30){ xAct=3; } else
-        if (xAct>20){ xAct=2; } else
-        if (xAct>10){ xAct=1; } else
-        if (xAct<-70){ xAct=-15; }else
-        if (xAct<-60){ xAct=-10; } else
-        if (xAct<-50){ xAct=-7; }else
-        if (xAct<-40){ xAct=-5; } else
-        if (xAct<-30){ xAct=-3; }else
-        if (xAct<-20){ xAct=-2; } else
-        if (xAct<-10){ xAct=-1; }else
+        if (xAct>70){ xAct=150; } else
+        if (xAct>60){ xAct=100; } else
+        if (xAct>50){ xAct=70; } else
+        if (xAct>40){ xAct=45; } else
+        if (xAct>30){ xAct=25; } else
+        if (xAct>20){ xAct=13; } else
+        if (xAct>10){ xAct=4; } else
+        if (xAct<-70){ xAct=-150; }else
+        if (xAct<-60){ xAct=-100; } else
+        if (xAct<-50){ xAct=-70; }else
+        if (xAct<-40){ xAct=-45; } else
+        if (xAct<-30){ xAct=-25; }else
+        if (xAct<-20){ xAct=-13; } else
+        if (xAct<-10){ xAct=-4; }else
             xAct=0;
 
-        if (yAct>90){ yAct=20; } else
-        if (yAct>70){ yAct=15; } else
-        if (yAct>60){ yAct=10; } else
-        if (yAct>50){ yAct=7; } else
-        if (yAct>40){ yAct=5; } else
-        if (yAct>30){ yAct=3; } else
-        if (yAct>20){ yAct=2; } else
-        if (yAct>10){ yAct=1; } else
-        if (yAct<-70){ yAct=-15; }else
-        if (yAct<-60){ yAct=-10; } else
-        if (yAct<-50){ yAct=-7; }else
-        if (yAct<-40){ yAct=-5; } else
-        if (yAct<-30){ yAct=-3; }else
-        if (yAct<-20){ yAct=-2; } else
-        if (yAct<-10){ yAct=-1; }else
+        if (yAct>90){ yAct=200; } else
+        if (yAct>70){ yAct=150; } else
+        if (yAct>60){ yAct=100; } else
+        if (yAct>50){ yAct=70; } else
+        if (yAct>40){ yAct=45; } else
+        if (yAct>30){ yAct=25; } else
+        if (yAct>20){ yAct=13; } else
+        if (yAct>10){ yAct=4; } else
+        if (yAct<-70){ yAct=-150; }else
+        if (yAct<-60){ yAct=-100; } else
+        if (yAct<-50){ yAct=-70; }else
+        if (yAct<-40){ yAct=-45; } else
+        if (yAct<-30){ yAct=-25; }else
+        if (yAct<-20){ yAct=-13; } else
+        if (yAct<-10){ yAct=-4; }else
             yAct=0;
 
         xAct=-xAct;
-        if ((yLast<15) && (yCont<15) && (yAct<15)){
+        if ((yLast<160) && (yCont<160) && (yAct<160)){
             xNext=posX+xAct;
-            if (xNext<-50) {posX=-50; } else
-            if (xNext>50) {posX=50; } else
-                posX=xNext;
+            if (xNext<-500) { if (posX!=-500) {posX=-500; modXY=1; }} else
+            if (xNext>500) { if (posX!=500) {posX=500; modXY=1;}} else
+            if (xAct!=0) {posX=xNext; modXY=1;}
 
             yNext=posY+yCont;
-            if (yNext<0) {posY=0; } else
-            if (yNext>100) {posY=100; } else
-                posY=yNext;
+            if (yNext<0) { if (posY!=0) {posY=0; modXY=1;}} else
+            if (yNext>1000) { if (posY!=0) {posY=1000; modXY=1;}} else
+            if (yCont!=0) {posY=yNext; modXY=1;}
 
             yCont=yLast;
             yLast=yAct;
@@ -152,9 +156,9 @@ public class MainActivity extends Activity implements SensorEventListener {
             text2x.setText(Integer.toString(posX));
         }
         else
-            yCont=20;
+            yCont=200;
 
-        if ((yAct<0)&&(yCont>15)){
+        if ((yAct<0)&&(yCont>160)){
             text4.setText("MARTILLO!!!");
             yLast=0;
             yCont=0;
@@ -162,10 +166,11 @@ public class MainActivity extends Activity implements SensorEventListener {
             boton=1;
         }
 
-        if ((xAct!=0)||(yCont!=0)||(boton!=0)){
-            mData=(""+boton+" "+posX+" "+posY);
+        if ((boton!=0)||(modXY==1)){
+            mData=(""+boton+" "+posX/10+" "+posY/10);
             mTopic="android";
             boton=0;
+            modXY=0;
             mMando();
         }
 
@@ -193,10 +198,13 @@ public class MainActivity extends Activity implements SensorEventListener {
         text2y = (TextView) findViewById(R.id.texto2y);
         text3 = (TextView) findViewById(R.id.texto3);
         text4 = (TextView) findViewById(R.id.texto4);
+        edit = (EditText)findViewById(R.id.editText);
+
 
         final Button button1 = findViewById(R.id.button1);
         button1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                ipAdr = edit.getText().toString();
                 cnt=0;
                 boton=2;
                 mData=(""+boton+" "+posX+" "+posY);
