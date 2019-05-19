@@ -1,278 +1,243 @@
+#include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <unistd.h>
-#include <pthread.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <time.h>
+#include <signal.h>
 #include <MQTTClient.h>
+#include "tiempo.h"
+#include "fsm.h"
 #include "MQTT/mqtt.h"
 #include "topo/topo.h"
 
+//Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.1.11"
+#define ADDR			"192.168.1.129"		//"172.16.2.4"
 #define ID					"Control"
-#define CANALRAIZ	"JUEGO"
-#define MICANAL		"JUEGO/CONTROL"
-#define MSG_MAX	25
+
+//Canales MQTT
+#define TOPO						"TOPO/topo"  // Publico en el canal del topo + su ID -> TOPO/topo1, TOPO/topo2...
+#define TOPO_SENSOR   	"TOPO/sonido"
+#define CONTROL				"JUEGO/CONTROL"
+#define MANDO_DISPARO	"MANDO/disparo"
+#define ANDROID       			"android"
+#define MANDO				"MANDO/Numero"
+
+// Mensajes MQQTT que maneja Control
+#define MSG_CONTROL_START				"1"
+#define MSG_CONTROL_STOP				"2"
+#define MSG_CONTROL_MARTILLO		"3"
+#define MSG_TOPO_DENTRO					"0"
+#define MSG_TOPO_FUERA					"1"
 
 //Definicion de flags
-#define INICIO						0x01
-#define FIN							0x02
-#define PARAR						0x04
+#define F_PLAY					0x01
+#define F_STOP					0x02
+#define F_DISPARO				0x04
 #define TOPO_ATINO			0x08
 
-//Subcanales
-#define TOPO_SERVO		"topos"
-#define TOPO_SENSOR	"sonido"
-#define MANDO				"MANDO/Numero"
-#define CONTROL			"JUEGO/CONTROL"
-
-//Subcanales -> Posicion en el array canal de subcripciones
-#define SUB_TOPO_SENSOR		0
-
-
-//Subcanales -> Posicion en el array canal de publicaciones
-#define PUB_CONTROL			0
-#define PUB_MANDO				1
-#define PUB_TOPO_SERVO		2
-
-//Posicion en la cadena de mensajes a publicar
-#define MSG_CONTROL_START		"0"
-#define MSG_CONTROL_STOP		"1"
-#define MSG_CONTROL_FIN			"2"
-#define MSG_CONTROL_WIN			"3"
-#define MSG_CONTROL_LOSE		"4"
-#define MSG_TOPO_DENTRO			"0"
-#define MSG_TOPO_FUERA			"1"
-#define MSG_ATINO							"1"
-
-//Tiempo espera 500 ms
-#define T_500_MS 500000
+//Tiempo de actualizacion de la FSM en ms --> tiene que ser MCD del tiempo del topo
+#define T_FSM_MS		500
+#define T_TOPO_MS 	1000		//1 segundo --> Tiempo que actualiza 
 
 //Puntuacion
 #define PTOS_MAX	9
 
-//Tiempo de duracion de la partida en segundos
-#define T_PARTIDA 60
+#define MSG_MAX				25
+#define MAX_TOPOS 			3
+#define DATOS_ANDROID 3 //Publica posicion X e Y de la torreta y el estado
+#define DELIMITADOR ' '
+#define X 0
+#define Y 1
+#define ESTADO 2
+#define MARTILLO "1"
+#define PLAY "2"
+#define STOP "3"
 
-char tecla;
-int flag = 0x00;
-int segundos = 0;
-int puntuacion = 0;
-int cuantaatras = T_PARTIDA;
 
+/******************************************************************************/
+
+// EstadosFSM
+enum fsm {OFF, ON};
+
+//Variables MQTT
 MQTTClient cliente;
 char mqtt_flag;
 char msg_rcv[MSG_MAX];
 char canal_rcv[MSG_MAX];
+const char *sub_canal[] = {TOPO_SENSOR, ANDROID}; //Canales a los que estoy suscrito
 
-typedef enum{Inicio, Preparado, Juego, Fin} estado;
-estado est = Inicio;
+topo n_topo[MAX_TOPOS]; //array de topos
 
-topo topo1; //Creo un topo
+char dato[DATOS_ANDROID][MSG_MAX]; //Datos que envia Andorid
 
-const char *sub_canal[] = {TOPO_SENSOR}; //Canales en los que estoy suscrito
-const char *pub_canal[] = {CONTROL, MANDO, TOPO_SERVO}; //Canales en los que publico
+int flag = 0x00;
 
-void canal(char *resultado, char *cadena1, const char *cadena2){sprintf(resultado,"%s/%s", cadena1, cadena2);}
+int tiempo_topo = 0;
+int topos_activos = 0;
+int puntuacion = 0;
 
-void menu(){
-	
-	printf("\t***********************************\n");
-	printf("\t             Whac a Mole!          \n");
-	printf("\t***********************************\n");
-	printf("\n");
-	printf("Menu inicio:\n");
-	printf("\t-Presione la tecla 's' para iniciar una partida\n");
-	printf("\t-Presione la tecla 'p' para salir de la partida\n");
-	printf("\t-Presione la tecla 'q' para salir del juego\n");
-	printf("\nPulse una tecla: \n");
-	
-}
+/******************************************************************************/
 
-void *teclado(void *arg) {
-	
-	while (tecla != 'q'){
-		
-		scanf("%c", &tecla);
-		
-		switch(tecla){
-			case 's':
-				flag = INICIO;
-			break;
-			case 'p':
-				flag = PARAR;
-			break;
-			case 'q':
-				flag = FIN;
-			break;
-		}
-	}
-	return 0;
-}
+void analizar_msg(){
 
-void *temporizador(void *arg) { //Activa un flag cada vez que pasa 1 segundo
-	while (tecla != 'q'){
-		sleep(1);
-		if (est == Juego) {segundos=1;}
-		else segundos = 0;
-	}
-	return 0;
-}
-
-void f_inicio(){
-	//char c[MSG_MAX];
-	
-	menu();
-	
-	//Inicializamos todas las variables
-	flag = 0x00;
-	segundos = 0;
-	puntuacion = PTOS_MAX;
-	cuantaatras = T_PARTIDA;
-	
-	//Todo listo para empezar
-	est = Preparado;
-	
-}
-
-void f_preparado(){
-	
-	if ((flag &= INICIO) == INICIO){
-		printf ("Juego iniciado\n");
-		mqtt_publicar(cliente, CONTROL, MSG_CONTROL_START);
-		flag &= ~INICIO;
-		est = Juego;
-	}
-}
-
-void analizar_msg(char *destino){
+	int j = 0;
+	int n = 0;
+	char c_aux;
+	char s_aux[MSG_MAX] = "";
 	
 	printf("Mensaje nuevo\n");
 	printf("\tCanal: %s\n", canal_rcv);
-	printf("\tMensaje: %s\n",msg_rcv);
+	printf("\tMensaje: %s\n", msg_rcv);
 	
-	if( !strcmp(canal_rcv, TOPO_SENSOR) ){
-		flag |= TOPO_ATINO;
-		printf("[TOPO] Has atinado!\n");
+	//Mensaje del mando Android
+	if( !strcmp(canal_rcv, ANDROID) ){
+		for(int i = 0; i < strlen(msg_rcv); i++){
+			c_aux = msg_rcv[i];
+			if (c_aux != DELIMITADOR){
+				sprintf(s_aux, "%s%c", s_aux, c_aux);
+			}
+			else{
+				strcpy(&dato[j][0],s_aux);
+				sprintf(s_aux, "%s", ""); //limpiamos la cadena
+				j++;
+			}
+		}
+		strcpy(&dato[j][0],s_aux);
+		
+		if( !strcmp(&dato[ESTADO][0],PLAY) ){flag |= F_PLAY;}
+		if( !strcmp(&dato[ESTADO][0],STOP) ){flag |= F_STOP;}
 	}
 	
-	mqtt_flag &= !NEW_MSG;
+	//Mensaje de un topo
+	else if( (!strcmp(canal_rcv, TOPO_SENSOR)) && ((flag & F_PLAY) == F_PLAY) ){ //Si no estamos jugando, se ignora
+		n = atoi(msg_rcv); //Se envia el identificador del topo al que ha dado
+		if( n>0 && n<MAX_TOPOS ){
+			n_topo[n-1].acierto = SI;
+			flag |= TOPO_ATINO;
+			printf("[TOPO%d] Has atinado!\n", n);
+		}
+	}
 	
+	sprintf(canal_rcv, " "); //Limpiamos cadenas
+	sprintf(msg_rcv, " ");
+	
+	mqtt_flag &= !NEW_MSG;
+
 }
 
-void f_juego(){
-	//char c[MSG_MAX];
+static int espera (fsm_t* this) {
+	printf("Esperando partida\n");
+	int start = 0;
+	if (mqtt_flag == NEW_MSG){analizar_msg();}
+	if ((flag & F_PLAY) == F_PLAY){start = 1;}
+	return start;
+}
+static int jugando (fsm_t* this) {
+	
+	int stop = 0;
 	int accion = TOPO_NADA;
-	char aux[MSG_MAX];
+	char canal_topo[MSG_MAX];
+	//char aux[MSG_MAX];
 	
-	if ((flag & PARAR) == PARAR){
-		
-		mqtt_publicar(cliente, CONTROL, MSG_CONTROL_STOP);
-		
-		est = Inicio;
-		flag &= ~PARAR;
-		
-	}else{
+	//printf("Jugando\n");
 	
-		if (mqtt_flag == NEW_MSG){analizar_msg(canal_rcv);}
+	if (mqtt_flag == NEW_MSG){analizar_msg();}
+	
+	if (topos_activos == 0){printf("ERROR: Ningun topo activo\n");}
+	else{
 		
-		//Topo
-		if (segundos == 1){
-			accion = f_topo(&topo1);
-			if (accion == TOPO_SALIR){
-				mqtt_publicar(cliente, TOPO_SERVO, MSG_TOPO_FUERA);
-			}else if (accion == TOPO_ESCONDERSE){
-				mqtt_publicar(cliente, TOPO_SERVO, MSG_TOPO_DENTRO);
+		//Topos
+		if (tiempo_topo == T_TOPO_MS){
+			
+			for(int i=0; i < MAX_TOPOS; i++){
+				if (n_topo[i].id != 0){ // Para los topos activos
+					accion = f_topo(&n_topo[i]);
+					sprintf(canal_topo, "%s%c", TOPO, n_topo[i].id);
+					if (accion == TOPO_SALIR){ //Le ordena salir
+						mqtt_publicar(cliente, canal_topo, MSG_TOPO_FUERA);
+					}else if (accion == TOPO_ESCONDERSE){ //Le ordena esconderse
+						mqtt_publicar(cliente, canal_topo, MSG_TOPO_DENTRO);
+					}
+				}
 			}
-			
-			cuantaatras--;
-			printf("Tiempo restante: %d\n", cuantaatras);
-			
-		}
+			tiempo_topo = 0;
+		}else tiempo_topo += T_FSM_MS;
 		
-		//Mando
-		if ((flag & TOPO_ATINO) == TOPO_ATINO){
+		//Mando -> Ahora ya no publico las vidas
+		/*if ((flag & TOPO_ATINO) == TOPO_ATINO){
 			
 			puntuacion--;
-			topo1.acierto = SI;
-			
 			printf("Qedan %d topos vivos\n",puntuacion);
 			sprintf(aux, "%d", puntuacion);
 			mqtt_publicar(cliente, MANDO, aux);
 			flag &= ~TOPO_ATINO;
 			
-		}
+		}*/
 		
-		// Control de la partida
-		if ((puntuacion == 0) && (cuantaatras > 0)){
-			printf("\t***********************************\n");
-			printf("\t             YOU WIN          \n");
-			printf("\t***********************************\n\n");
-			mqtt_publicar(cliente, CONTROL, MSG_CONTROL_WIN);
-			est = Inicio;
-		}else if ((puntuacion > 0) && (cuantaatras == 0)){
-			printf("\t***********************************\n");
-			printf("\t             YOU LOSE!          \n");
-			printf("\t***********************************\n\n");
-			mqtt_publicar(cliente, CONTROL, MSG_CONTROL_LOSE);
-			est = Inicio;
-		}
-		
-		segundos = 0;
 	}
+	
+	if ((flag & F_STOP) == F_STOP){stop = 1;}
+	return stop;
 }
 
-void f_fin(){
-	//char c[MSG_MAX];
-	//canal(c, CANALRAIZ, pub_canal[PUB_CONTROL] );
-	mqtt_publicar(cliente, CONTROL, MSG_CONTROL_FIN);
+static void inicio (fsm_t* this) {
+	// Empieza la partida
+	printf("Partida iniciada\n");
+	mqtt_publicar(cliente, CONTROL, MSG_CONTROL_START);
+}
+static void fin (fsm_t* this) {
+	// Termina la partida
+	printf("Partida terminada\n");
+	mqtt_publicar(cliente, CONTROL, MSG_CONTROL_STOP);
+	mqtt_flag &= !F_PLAY; //Este permanece activo durante toda la partida, al finalizar se borra
+	mqtt_flag &= !F_STOP;
+}
+
+// FSM
+static fsm_trans_t control[] = {
+  { OFF, espera, ON, inicio},
+  { ON, jugando, OFF, fin},
+  {-1, NULL, -1, NULL },
 };
 
+int main (){
+	struct timeval clk_period = { 0, T_FSM_MS * 1000 };
+	struct timeval next_activation;
 
-
-int main(void){
+	fsm_t* my_fsm = fsm_new (control);
 	
-	int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
-	//char c[MSG_MAX];
-	
-	pthread_t id_teclado;
-    pthread_create(&id_teclado, NULL, teclado, NULL); 
-	
-	pthread_t id_temporizador;
-    pthread_create(&id_temporizador, NULL, temporizador, NULL); 
-	
-	crear_topo(&topo1);
-	
+	//Establecer conexion MQTT con el Broker
 	if (mqtt_connect(&cliente, ADDR, ID) != OK){
 		printf("Error al establecer la conexion\n");
 		exit(0);
+	}printf("Conexion MQTT establecida\n");
+	
+	//Suscripcion a los caneles definidos
+	int n_canales = sizeof(sub_canal)/sizeof(*sub_canal);
+	for(int i=0; i < n_canales; i++){
+		printf("Te has suscrito al canal: %s\n", sub_canal[i]);
+		suscribirse(&cliente, (char *)sub_canal[i]);
 	}
 	
-	printf("Te has suscrito a %d canales:\n", n_canales);
-	suscribirse(&cliente, "sonido");
-	printf("\t%s\n", "sonido");
+	//Inicializamos topos
+	for(int i = 0; i < sizeof(n_topo)/sizeof(*n_topo); i++){crear_topo(&n_topo[i]);}
 	
-	while(tecla != 'q'){
-		switch(est){
-			case Inicio:
-				f_inicio();
-			break;
-			case Preparado:
-				f_preparado();
-			break;
-			case Juego:
-				f_juego();
-			break;
-			case Fin:
-				f_fin();
-			break;
-		}
-		//printf("Estado: %d\n", est);
-		usleep(T_500_MS); //esperamos 500 ms entre cada transicion
-			
+	//Fuerzo al topo1 a estar activo
+	topos_activos = 1;
+	n_topo[0].id=1; //topo1
+	
+	gettimeofday (&next_activation, NULL);
+	
+	while (1) {
+		//printf("Bucle principal\n");
+		fsm_fire (my_fsm);
+		timeval_add (&next_activation, &next_activation, &clk_period);
+		delay_until (&next_activation);
 	}
-	
-	return 0;
-	
+	return 1;
 }

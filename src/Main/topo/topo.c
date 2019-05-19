@@ -6,7 +6,8 @@
 
 
 void crear_topo(topo *topo){
-	topo->id = "topo1";
+	//topo->id = "topoX";
+	topo->id = 0; // El identificado del topo va de 1 a MAX_TOPOS. Si es 0 es que no esta activo
 	topo->estado = NO_ASIGNADO;
 	topo->acierto = NO;
 	topo->t_on = 0;
@@ -18,6 +19,7 @@ int f_topo(topo *topo){
 	int accion = TOPO_NADA;
 	
 	if (topo->acierto == SI){
+		//printf("Topo muerto, reseteo valores\n");
 		topo->estado = NO_ASIGNADO;
 		topo->acierto = NO;
 	}
@@ -46,7 +48,7 @@ int f_topo(topo *topo){
 		break;
 	}
 	
-	//printf("[TOPO]%s-%d-%d-%d-%d\n", topo->id, topo->estado, topo->acierto, topo->t_on, topo->t_off);
+	//printf("[TOPO%d]\n\tEstado: %d\n\tAcierto: %d\n\tT_on: %d\n\tT_off: %d\n", topo->id, topo->estado, topo->acierto, topo->t_on, topo->t_off);
 	
 	return accion;
 	

@@ -13,7 +13,8 @@
 #define TOPO_NADA 2
 
 typedef struct{
-	char *id;
+	//char *id;
+	int id;
 	int estado;
 	int acierto;
 	int t_on;
