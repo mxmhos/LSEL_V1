@@ -12,16 +12,15 @@ from sense_hat import SenseHat
 
 host = "192.168.1.202" # '172.16.2.3' #
 port = 1883
-TOPIC_estado = "JUEGO/CONTROL"
-TOPIC_posX = "MANDO/posicionX"
-TOPIC_posY = "MANDO/posicionY"
-TOPIC_boton = "MANDO/boton"
-TOPIC_num = "MANDO/numero"
-TOPIC_atino = "TOPO/sonido"
-TOPIC_rot = "MANDO/rot"
-TOPIC_modo = "JUEGO/modo"
-TOPIC_timer = "MANDO/timer"
+TOPIC_estado = "estado"
+TOPIC_posX = "MANDO/x"
+TOPIC_posY = "MANDO/y"
 TOPIC_disparo = "MANDO/disparo"
+TOPIC_num = "puntuacion"
+TOPIC_atino = "TOPO/sonido"
+TOPIC_timer = "tiempo"
+TOPIC_boton = "DISPLAY/boton"
+TOPIC_rot = "DISPLAY/rot"
 
 #***************************************************************************
 #***********   FUNCIONES Y DEFINICIONES DEL SCREEN *************************
@@ -117,10 +116,8 @@ def on_message(client, userdata, msg):
 		atino=int(msg.payload,10)
 	if msg.topic==TOPIC_rot:
 		sense.rotation=int(msg.payload)
-	if msg.topic==TOPIC_modo:
-		modo=int(msg.payload,10)
 	if msg.topic==TOPIC_timer:
-		t_rst=int(msg.payload,10)
+		timer=int(msg.payload,10)
 	if msg.topic==TOPIC_disparo:
 		disparo=int(msg.payload,10)
 
@@ -136,7 +133,6 @@ client.subscribe(TOPIC_estado)
 client.subscribe(TOPIC_num)
 client.subscribe(TOPIC_atino)
 client.subscribe(TOPIC_rot)
-client.subscribe(TOPIC_modo)
 client.subscribe(TOPIC_timer)
 client.subscribe(TOPIC_disparo)
 
@@ -153,11 +149,11 @@ while True:
 		estado=1		#este '1' esta para que arranque SOLO!!!
 		#estado=-1		#hay que poner estado en -1 si queremos que espere al MAIN!!!
 		sense.show_message("Bienvenido", text_colour=msgC1)
-		pygame.mixer.music.load("Back.mp3")
-		pygame.mixer.music.play()
 	elif estado==1:	#ESTADO PREVIO A JUEGO (al que se llemaria desde el MAIN)
 		sense.set_pixels(imgGo)
 		time.sleep(1)
+		pygame.mixer.music.load("Back.mp3")
+		pygame.mixer.music.play()
 		sense.clear()
 		seconds=int(time.time())+99
 		timer=99
@@ -197,30 +193,30 @@ while True:
 				time.sleep(1)
 
 		show_vidas(num, msgC1, msgC2)
-		if timer==0:
-			estado=4
+		show_timer(timer,msgC1[0],msgC1[1],msgC1[2])
 
 	elif estado==2:		#ESTADO QUE NO SE PARA QUE ESTA
 		pygame.mixer.stop
 		sense.show_message("Fin Partida", text_colour=msgC1)
+		sense.clear()
 		estado=-1
 
 	elif estado==3:		#ESTADO GANASTE
 		pygame.mixer.stop
 		sense.show_message("You WIN", text_colour=msgC1)
-		estado==-1
+		sense.clear()
+		estado=-1
 
 	elif estado==4:		#ESTADO PERDISTE
 		pygame.mixer.stop
 		sense.show_message("You LOSE", text_colour=msgC1)
-		estado==-1
+		sense.clear()
+		estado=-1
 
 	elif estado==0:		#ESTADO APAGAR
 		pygame.mixer.stop
 		sense.show_message("Chau!!!...", text_colour=msgC1)
+		sense.clear()
 		estado=-1
 
-	if timer>0:			#IMPRESION DE TIEMPO
-		timer=seconds-int(time.time())
-		show_timer(timer,msgC1[0],msgC1[1],msgC1[2])
 	time.sleep(.2)

@@ -9,8 +9,8 @@
 #define TOPIC_estado "JUEGO/CONTROL"
 #define TOPIC_modo "JUEGO/modo"
 #define TOPIC_atino "TOPO/sonido"
-#define TOPIC_posX "MANDO/posicionX"
-#define TOPIC_posY "MANDO/posicionY"
+#define TOPIC_posX "MANDO/x"
+#define TOPIC_posY "MANDO/y"
 #define TOPIC_boton "MANDO/boton"
 #define TOPIC_android "android"
 
@@ -31,17 +31,13 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 			efecto=2;
 		printf("Recibo atino\n");
 	}
-	else if (strcmp(topicName, "android")==0) {
-		char *ptr = strtok(message->payload, " ");
-		boton = atoi(ptr);
-		ptr = strtok(NULL, " ");  
-		next_move.x=((P_MAX+P_MIN)/2) + atoi(ptr);
-		ptr = strtok(NULL, " ");
-		next_move.y=P_MIN+atoi(ptr);
-		printf("data:%s Boton:%d, x:%d, y:%d", message->payload, boton, next_move.x, next_move.y);
-
-		//printf("Recibo next_move.x\n");
+	else if (strcmp(topicName, "MANDO/x")==0) {
+		next_move.x=atoi(message->payload);
 	}
+	else if (strcmp(topicName, "MANDO/y")==0) {
+		//next_move.y=atoi(message->payload);
+	}
+
 	//printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
 
 	MQTTClient_free(topicName);
@@ -85,7 +81,7 @@ int mqtt_init() {
 	MQTTClient_subscribe(client, TOPIC_posX, QOS);
 	MQTTClient_subscribe(client, TOPIC_posY, QOS);
 	MQTTClient_subscribe(client, TOPIC_boton, QOS);
-	MQTTClient_subscribe(client, TOPIC_android, QOS);
+	//MQTTClient_subscribe(client, TOPIC_android, QOS);
 
 
 	return 0;
