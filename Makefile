@@ -1,20 +1,9 @@
-CC=gcc
-CFLAGS=-g -Wall -O3 
-LDFLAGS=-lwiringPi -lrt -lcrypt -lm
-#LDLIBS=-lwiringPi
+CC = gcc
+CFLAGS = -Wall -g
 
-all: piTankGo
+all:main.c
+	$(CC) $(CFLAGS) -o main main.c MQTT/mqtt.c topo/topo.c fsm.c tiempo.c -pthread -lpaho-mqtt3cs
 
-#OBJS=kbhit.o fsm.o piTankGo_1.o player.o tmr.o torreta.o player.o cliente.o
-OBJS=kbhit.o fsm.o piTankGo_1.o tmr.o torreta.o player.o cliente.o
-
-piTankGo: $(OBJS)
-	$(CC) -o $@ $^ $(LDFLAGS)
-
-%.o: %.c
-	$(CC) -c -o $@ $^ $(CFLAGS)
 
 clean:
-	$(RM) *.o *~ piTankGo
-
-
+	rm *.o main

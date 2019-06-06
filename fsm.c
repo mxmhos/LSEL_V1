@@ -1,33 +1,18 @@
-/*
- * fsm.c
- *
- *  Created on: 1 de mar. de 2016
- *      Author: Administrador
- */
-
 #include <stdlib.h>
 #include "fsm.h"
 
 fsm_t*
-fsm_new (int state, fsm_trans_t* tt, void* user_data)
+fsm_new (fsm_trans_t* tt)
 {
   fsm_t* this = (fsm_t*) malloc (sizeof (fsm_t));
-  fsm_init (this, state, tt, user_data);
+  fsm_init (this, tt);
   return this;
 }
 
 void
-fsm_init (fsm_t* this, int state, fsm_trans_t* tt, void* user_data)
+fsm_init (fsm_t* this, fsm_trans_t* tt)
 {
-  this->current_state = state;
   this->tt = tt;
-  this->user_data = user_data;
-}
-
-void
-fsm_destroy (fsm_t* this)
-{
-  free(this);
 }
 
 void
