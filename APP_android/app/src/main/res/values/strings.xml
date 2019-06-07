@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">appTopo</string>
+    <string name="act_main_gyroscope_label">Giroscopio</string>
+    <string name="act_main_accelerometer_label">Acelerómetro</string>
+    <string name="act_main_no_acuracy">Sin Suficiente presición</string>
+    <string name="mainBoton">Play</string>
+    <string name="SecondBoton1">Play</string>
+    <string name="SecondBoton2">Stop</string>
+</resources>

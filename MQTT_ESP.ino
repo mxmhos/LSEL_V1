@@ -25,14 +25,13 @@
 #define MV_TOPO 0
 #define ON 1
 #define OFF 0
+#define DENTRO 10
+#define FUERA 95 
 
 const char* ssid = "Especial_MCHP";
 const char* password = "M15SEB304";
 const char* mqtt_server = "172.16.2.4";//ip de donde se encuentra alojado el servidor
 
-/*const char* ssid = "lsel";
-const char* password = "123456789";
-const char* mqtt_server = "192.168.43.148";//ip de donde se encuentra alojado el servidor*/
 
 const int port = 1883;
 
@@ -52,18 +51,17 @@ void reconnect();
 void shoot();
 
 //Una vez implementado correctamente en el ESP hay que borrar la comunicacion serial
-void setup() {
+void setup() {  
   pinMode(PHOTO_RCV,INPUT);//Entrada del fototransistor PIN 2
-  servo.attach(MV_TOPO,1000,2000);//PWM para el control del servo que mueve a los topos conectado al PIN 0
-  servo.writeMicroseconds(1000);
-  attachInterrupt(PHOTO_RCV,shoot,FALLING); // Interrupcion con el flanco de bajada   
+  servo.attach(MV_TOPO);//PWM para el control del servo que mueve a los topos conectado al PIN 0
+  servo.writeMicroseconds(1000);  
   setup_wifi();
   client.setServer(mqtt_server, port);
   client.setCallback(callback);
 }
 
 void loop() {
-
+  int aux=0;
   if (!client.connected()) {
     reconnect();
   }
@@ -71,11 +69,12 @@ void loop() {
   if ((shoot_rcv == 1) && (estado == ON)) {
     /*snprintf (msg, 75, "hello world #%ld", value);
     Serial.print("Publish message: ");
-    Serial.println(msg);*/
-    estado = OFF;
-    client.publish("TOPO/sonido", "1");
-    servo.writeMicroseconds(1000);//servo.write(0);
-    shoot_rcv = 0;
+    Serial.println(msg);*/    
+    aux = digitalRead(PHOTO_RCV);
+    if (aux){      
+      client.publish("topo1/acierto", "1");
+      shoot_rcv = 0;
+    }
   }
 
 }
@@ -83,25 +82,29 @@ void setup_wifi() {
 
   delay(100);
   // We start by connecting to a WiFi network
-
   WiFi.begin(ssid, password);
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
   }
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
-  
-  if ((char)payload[0] == '1') {
-    estado = ON;
-    servo.writeMicroseconds(2000);
-    attachInterrupt(PHOTO_RCV,shoot,FALLING);
-    //servo.write(180);   // Topo Sale
-  } else if((char)payload[0] == '0') {
-    estado = OFF;
-    servo.writeMicroseconds(1000);//servo.write(0);  // Topo entra
+  String prueba = (String) topic;
+  //Comprueba si se ha realizado un disparo
+  if ( prueba == "MANDO/disparo"){
+    if ((char)payload[0] == '1') { shoot_rcv = 1;} else  shoot_rcv = 0;      
   }
+  // Comprueba la orden para levantar el topo
+  if(prueba == "topo1/posicion"){
+      if ((char)payload[0] == '1') {
+        estado = ON;
+        servo.write(FUERA);
+      } else{ //if((char)payload[0] == '0') {
+      estado = OFF;
+      servo.write(DENTRO);// Topo entra
+    }    
+  }
+  
 
 }
 
@@ -111,7 +114,8 @@ void reconnect() {
     // Attempt to connect
     if (client.connect("ESP8266Client")) {
       // ... and resubscribe
-      client.subscribe("TOPO/topo1");
+      client.subscribe("topo1/posicion");
+      client.subscribe("MANDO/disparo");
     } else {
       // Wait 5 seconds before retrying
       delay(5000);
@@ -119,8 +123,4 @@ void reconnect() {
   }
 }
 
-void shoot(){
-  detachInterrupt(digitalPinToInterrupt(PHOTO_RCV));
-  shoot_rcv = 1;
-}
 

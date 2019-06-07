@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SecondActivity">
+
+    <TextView
+        android:id="@+id/accele_x"
+        android:layout_width="121dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="30dp"
+        android:layout_marginBottom="16dp"
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/accele_y"
+        android:layout_width="104dp"
+        android:layout_height="45dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="16dp"
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/accele_z"
+        app:layout_constraintStart_toEndOf="@+id/accele_x" />
+
+    <TextView
+        android:id="@+id/accele_z"
+        android:layout_width="104dp"
+        android:layout_height="44dp"
+        android:layout_marginEnd="30dp"
+        android:layout_marginBottom="16dp"
+        android:text=""
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/secondPlay"
+        android:layout_width="128dp"
+        android:layout_height="73dp"
+        android:layout_marginStart="151dp"
+        android:layout_marginTop="228dp"
+        android:layout_marginEnd="132dp"
+        android:text="@string/SecondBoton1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/stop"
+        android:layout_width="127dp"
+        android:layout_height="71dp"
+        android:layout_marginStart="151dp"
+        android:layout_marginTop="44dp"
+        android:layout_marginEnd="133dp"
+        android:text="@string/SecondBoton2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/secondPlay" />
+
+</android.support.constraint.ConstraintLayout>
