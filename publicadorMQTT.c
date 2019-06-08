@@ -16,7 +16,7 @@
 //Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.43.27"		//"172.16.2.4"
+#define ADDR			"192.168.1.131"		//"172.16.2.4"
 #define ID					"test"
 #define MSG_MAX	25
 
@@ -24,8 +24,8 @@
 #define SUSCRITO_ACIERTO_1		"topo1/acierto" //Publica 1 si le han dado al topo
 #define SUSCRITO_ACIERTO_2		"topo2/acierto"
 #define SUSCRITO_ACIERTO_3		"topo3/acierto"
-#define SUSCRITO_START				"mando/start" //Empieza la partida
-#define SUSCRITO_STOP				"mando/stop" //Termina la partida
+#define SUSCRITO_START				"MANDO/start" //Empieza la partida
+#define SUSCRITO_STOP				"MANDO/stop" //Termina la partida
 
 //Definicion de flags
 #define F_PLAY					0x01
@@ -89,10 +89,10 @@ int main (){
 				mqtt_publicar(cliente, "topo3/acierto", "1");
 			break;
 			case '4':
-				mqtt_publicar(cliente, "mando/start", "1");
+				mqtt_publicar(cliente, "MANDO/start", "1");
 			break;
 			case '5':
-				mqtt_publicar(cliente, "mando/stop", "1");
+				mqtt_publicar(cliente, "MANDO/stop", "1");
 			break;
 			case 'q':
 				printf ("Saliendo del programa...\n"); 

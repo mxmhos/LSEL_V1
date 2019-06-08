@@ -16,7 +16,7 @@
 //Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.43.27"		//"172.16.2.4"
+#define ADDR			"192.168.1.131"		//"172.16.2.4"
 #define ID					"Control"
 #define MSG_MAX	25
 
@@ -108,6 +108,7 @@ void analizar_msg(){
 			n_topo[id-1].acierto = SI;
 			flag |= TOPO_ATINO;
 			printf("[TOPO%d] Has atinado!\n", id);
+			mqtt_publicar(cliente, (char *)servo[id-1], MSG_TOPO_DENTRO);
 		}
 	}
 	
@@ -116,6 +117,66 @@ void analizar_msg(){
 	
 	mqtt_flag &= !NEW_MSG;
 
+}
+
+int actualizo_puntuacion(){
+	
+	int fin_vidas = 0;
+	
+	char aux[MSG_MAX];
+	
+	if (puntuacion > 0){
+			puntuacion--;
+			printf("Qedan %d topos vivos\n",puntuacion);
+			sprintf(aux, "%d", puntuacion);
+			//mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
+			flag &= ~TOPO_ATINO;
+		}
+		else{
+			flag |= F_WIN;
+			fin_vidas = 1; //Se han matado a todos los topos
+		}
+	return fin_vidas;
+}
+
+void actualizo_topos(){
+	int accion = TOPO_NADA;
+	char aux[MSG_MAX];
+	int posicion_topo = 0;
+	
+	for(int i=0; i < MAX_TOPOS; i++){
+		
+		accion = f_topo(&n_topo[i]);	// Comprueba los tiempos tiempos de los topos y devuelve la accion a tomar:
+													// 		- TOPO_SALIR si se le ha acabado el tiempo de escondido
+													// 		- TOPO_ESCONDERSE si se le ha acabado el tiempo que tiene que estar fuera
+		
+		if (accion == TOPO_SALIR){ //Le ordena salir
+			posicion_topo = 2;
+		}
+		else if (accion == TOPO_ESCONDERSE){ //Le ordena esconderse
+			posicion_topo = 1;
+		}
+		
+		if (posicion_topo) { // Para los topos que se les ha agotado el tiempo, se le publica la accion que deben tomar (esconderde o salir)
+			sprintf(aux, "%d", posicion_topo-1);
+			mqtt_publicar(cliente, (char *)servo[i], aux);
+			/* printf("Posicion: %d\n", posicion_topo);	
+			printf("Topo: %d \tAccion: %s\n", i, aux); */
+		}
+		posicion_topo = 0;
+	}
+}
+
+void debbug(){
+	printf("Vidas %d\tTiempo... %d\n",puntuacion, cuentaatras);
+	
+	 printf("TOPO\t 1\t 2\t 3\t\n");
+	printf("Estado\t %d\t %d\t %d\t\n",n_topo[0].estado, n_topo[1].estado, n_topo[2].estado);
+	printf("Acierto\t %d\t %d\t %d\t\n",n_topo[0].acierto, n_topo[1].acierto, n_topo[2].acierto);
+	printf("T_on\t %d\t %d\t %d\t\n",n_topo[0].t_on, n_topo[1].t_on, n_topo[2].t_on);
+	printf("T_off\t %d\t %d\t %d\t\n",n_topo[0].t_off, n_topo[1].t_off, n_topo[2].t_off);
+	
+	printf("------------------------------------------------------------------------------\n");
 }
 
 static int espera (fsm_t* this) {
@@ -128,61 +189,28 @@ static int espera (fsm_t* this) {
 static int jugando (fsm_t* this) {
 	
 	int stop = 0;
-	int accion = TOPO_NADA;
-	int posicion_topo = 0;
 	char aux[MSG_MAX];
 	
 	segundo += T_FSM_MS;
 	
-	if (mqtt_flag == NEW_MSG){analizar_msg();}
+	if (mqtt_flag == NEW_MSG){analizar_msg();} // Si ha llegado un mensaje, se analiza
 	
-	if ((flag & TOPO_ATINO) == TOPO_ATINO){
-		
-		if (puntuacion > 0){
-			puntuacion--;
-			printf("Qedan %d topos vivos\n",puntuacion);
-			sprintf(aux, "%d", puntuacion);
-			mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
-			flag &= ~TOPO_ATINO;
-		}
-		else{
-			flag |= F_WIN;
-			stop = 1;
-		}
-	}
-	
-	if (segundo == T_SEGUNDO_MS && flag){ //Cada segundo se actualiza el estado del juego, la cuenta atras, los topos...
-		
+	if ((flag & TOPO_ATINO) == TOPO_ATINO){stop = actualizo_puntuacion();} // Si ha muerto un topo, se actualiza la puntuacion
+	if (segundo == T_SEGUNDO_MS && !stop){ //Cada segundo se actualiza el estado del juego, la cuenta atras, los topos...
 		sprintf(aux, "%d", cuentaatras);
 		mqtt_publicar(cliente, CANAL_TIEMPO, aux);
-		
 		if (cuentaatras == 0){
 			flag |= F_LOSE;
 			stop = 1;
-		}else{
-			for(int i=0; i < MAX_TOPOS; i++){
-				accion = f_topo(&n_topo[i]);
-				if (accion == TOPO_SALIR){ //Le ordena salir
-					posicion_topo = 2;
-				}else if (accion == TOPO_ESCONDERSE){ //Le ordena esconderse
-					posicion_topo = 1;
-				}
-				if (posicion_topo) {
-					sprintf(aux, "%d", posicion_topo-1);
-					mqtt_publicar(cliente, (char *)servo[i], aux);}
-			}
+		}
+		else{
+			actualizo_topos();
 			cuentaatras--;
 		}
 		segundo = 0;
 		
+		debbug(); // Mensajes a mostrar para depuracion
 	}
-	
-	printf("Vidas%d\tTiempo...%d\n",puntuacion, cuentaatras);
-	printf("TOPO\t 1\t 2\t 3\t\n");
-	printf("Estado\t %d\t %d\t %d\t\n",n_topo[0].estado, n_topo[1].estado, n_topo[2].estado);
-	printf("Acierto\t %d\t %d\t %d\t\n",n_topo[0].acierto, n_topo[1].acierto, n_topo[2].acierto);
-	printf("T_on\t %d\t %d\t %d\t\n",n_topo[0].t_on, n_topo[1].t_on, n_topo[2].t_on);
-	printf("T_off\t %d\t %d\t %d\t\n",n_topo[0].t_off, n_topo[1].t_off, n_topo[2].t_off);
 	
 	if ((flag & F_STOP) == F_STOP){stop = 1;}
 	return stop;
@@ -193,15 +221,13 @@ static void inicio (fsm_t* this) {
 	char aux[MSG_MAX];
 	
 	printf("Partida iniciada\n");
-	cuentaatras = TIEMPO_JUEGO;
+	cuentaatras = TIEMPO_JUEGO; //Reinicio el tiempo y las vidas
 	puntuacion = PTOS_MAX;
-	mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_PLAY);
 	sprintf(aux, "%d", puntuacion);
 	mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
+	mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_PLAY);
 }
-static void fin (fsm_t* this) {
-	// Termina la partida
-	char aux[MSG_MAX];
+static void fin (fsm_t* this) { // Termina la partida
 	
 	printf("Partida terminada\n");
 	
@@ -209,12 +235,9 @@ static void fin (fsm_t* this) {
 	else if ((flag & F_WIN) == F_WIN) mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_WIN);
 	else mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_STOP);
 	
-	for(int i=0; i < MAX_TOPOS; i++){mqtt_publicar(cliente, (char *)servo[i], aux);}
+	for(int i=0; i < MAX_TOPOS; i++){mqtt_publicar(cliente, (char *)servo[i], MSG_TOPO_DENTRO);}
 	
-	flag &= !F_PLAY; //Este permanece activo durante toda la partida, al finalizar se borra
-	flag &= !F_STOP;
-	flag &= !F_WIN;
-	flag &= !F_LOSE;
+	flag = 0x00; // limpio todos los flags
 }
 
 // FSM
@@ -244,15 +267,12 @@ int main (){
 	}
 	
 	//Inicializamos topos
-	//for(int i = 0; i < sizeof(n_topo)/sizeof(*n_topo); i++){crear_topo(&n_topo[i]);}
-	
-	//Fuerzo inicializacion de topos
-	crear_topo(&n_topo[0]);
-	crear_topo(&n_topo[1]);
-	crear_topo(&n_topo[2]);
-	n_topo[0].id=1; //topo1
-	n_topo[1].id=2; //topo1
-	n_topo[2].id=3; //topo1
+	crear_topo(&n_topo[0]); //topo1
+	crear_topo(&n_topo[1]); //topo2
+	crear_topo(&n_topo[2]); //topo3
+	n_topo[0].id=1;
+	n_topo[1].id=2;
+	n_topo[2].id=3;
 	
 	gettimeofday (&next_activation, NULL);
 	

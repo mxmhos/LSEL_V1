@@ -26,8 +26,8 @@ int f_topo(topo *topo){
 	
 	switch (topo->estado){
 		case NO_ASIGNADO:
-			n = (rand() % 10)+1; //numero aleatorio entre 1 y 10;
-			m = (rand() % 10)+1; //numero aleatorio entre 1 y 10;
+			n = (rand() % 7)+3; //numero aleatorio entre 3 y 10;
+			m = (rand() % 7)+3; //numero aleatorio entre 3 y 10;
 			topo->t_on = n;
 			topo->t_off = m;
 			topo->estado=ESCONDIDO;
@@ -42,6 +42,7 @@ int f_topo(topo *topo){
 		case ESCONDIDO:
 			if (topo->t_off != 0){topo->t_off--;}
 			else {
+				topo->t_on--;
 				topo->estado=FUERA;
 				accion = TOPO_SALIR;
 			}
