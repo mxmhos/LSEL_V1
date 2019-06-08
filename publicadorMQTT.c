@@ -16,7 +16,7 @@
 //Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.1.131"		//"172.16.2.4"
+#define ADDR			"192.168.1.102"		//"172.16.2.4"
 #define ID					"test"
 #define MSG_MAX	25
 
@@ -73,6 +73,7 @@ int main (){
 	printf("\t 3 = Acierto topo3\n");
 	printf("\t 4 = START\n");
 	printf("\t 5 = STOP \n");
+	printf("\t 6 = Disparo \n");
 	printf("\t q = salir \n");
 	
 	while (salir) {
@@ -93,6 +94,9 @@ int main (){
 			break;
 			case '5':
 				mqtt_publicar(cliente, "MANDO/stop", "1");
+			break;
+			case '6':
+				mqtt_publicar(cliente, "MANDO/disparo", "1");
 			break;
 			case 'q':
 				printf ("Saliendo del programa...\n"); 
