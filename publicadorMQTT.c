@@ -16,7 +16,7 @@
 //Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.43.83"		//"172.16.2.4"
+#define ADDR			"192.168.43.27"		//"172.16.2.4"
 #define ID					"test"
 #define MSG_MAX	25
 

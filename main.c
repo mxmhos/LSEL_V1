@@ -16,7 +16,7 @@
 //Conexion MQTT
 #define QOS				1
 #define TIMEOUT		10000L
-#define ADDR			"192.168.43.83"		//"172.16.2.4"
+#define ADDR			"192.168.43.27"		//"172.16.2.4"
 #define ID					"Control"
 #define MSG_MAX	25
 
@@ -24,8 +24,8 @@
 #define SUSCRITO_ACIERTO_1		"topo1/acierto" //Publica 1 si le han dado al topo
 #define SUSCRITO_ACIERTO_2		"topo2/acierto"
 #define SUSCRITO_ACIERTO_3		"topo3/acierto"
-#define SUSCRITO_START				"mando/start" //Empieza la partida
-#define SUSCRITO_STOP				"mando/stop" //Termina la partida
+#define SUSCRITO_START				"MANDO/start" //Empieza la partida
+#define SUSCRITO_STOP				"MANDO/stop" //Termina la partida
 
 //Canales MQTT publica
 #define CANAL_SERVO_1			"topo1/posicion" //Publica 1 si el topo sale y 0 si se esconde
@@ -59,7 +59,7 @@
 //Juego
 #define PTOS_MAX				8
 #define MAX_TOPOS 			3
-#define TIEMPO_JUEO 		99 //Tiempo de juego 99 segundos
+#define TIEMPO_JUEGO 		99 //Tiempo de juego 99 segundos
 
 
 /******************************************************************************/
@@ -132,51 +132,57 @@ static int jugando (fsm_t* this) {
 	int posicion_topo = 0;
 	char aux[MSG_MAX];
 	
-	printf("Jugando\n");
+	segundo += T_FSM_MS;
 	
 	if (mqtt_flag == NEW_MSG){analizar_msg();}
-	else{
+	
+	if ((flag & TOPO_ATINO) == TOPO_ATINO){
 		
-		//Topos
-		if (segundo == T_SEGUNDO_MS){
-			
-			if (cuentaatras == 0){
-				flag |= F_LOSE;
-				stop = 1;
-			}
-			else{
-				for(int i=0; i < MAX_TOPOS; i++){
-					accion = f_topo(&n_topo[i]);
-					if (accion == TOPO_SALIR){ //Le ordena salir
-						posicion_topo = 2;
-					}else if (accion == TOPO_ESCONDERSE){ //Le ordena esconderse
-						posicion_topo = 1;
-					}
-					if (posicion_topo) {
-						sprintf(aux, "%d", posicion_topo-1);
-						mqtt_publicar(cliente, (char *)servo[i], aux);}
-				}
-			}
-			segundo = 0;
-			
-		}else segundo += T_FSM_MS;
-		
-		if ((flag & TOPO_ATINO) == TOPO_ATINO){
-			
-			if (puntuacion > 0){
-				puntuacion--;
-				printf("Qedan %d topos vivos\n",puntuacion);
-				sprintf(aux, "%d", puntuacion);
-				mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
-				flag &= ~TOPO_ATINO;
-			}
-			else{
-				flag |= F_WIN;
-				stop = 1;
-			}
+		if (puntuacion > 0){
+			puntuacion--;
+			printf("Qedan %d topos vivos\n",puntuacion);
+			sprintf(aux, "%d", puntuacion);
+			mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
+			flag &= ~TOPO_ATINO;
 		}
+		else{
+			flag |= F_WIN;
+			stop = 1;
+		}
+	}
+	
+	if (segundo == T_SEGUNDO_MS && flag){ //Cada segundo se actualiza el estado del juego, la cuenta atras, los topos...
+		
+		sprintf(aux, "%d", cuentaatras);
+		mqtt_publicar(cliente, CANAL_TIEMPO, aux);
+		
+		if (cuentaatras == 0){
+			flag |= F_LOSE;
+			stop = 1;
+		}else{
+			for(int i=0; i < MAX_TOPOS; i++){
+				accion = f_topo(&n_topo[i]);
+				if (accion == TOPO_SALIR){ //Le ordena salir
+					posicion_topo = 2;
+				}else if (accion == TOPO_ESCONDERSE){ //Le ordena esconderse
+					posicion_topo = 1;
+				}
+				if (posicion_topo) {
+					sprintf(aux, "%d", posicion_topo-1);
+					mqtt_publicar(cliente, (char *)servo[i], aux);}
+			}
+			cuentaatras--;
+		}
+		segundo = 0;
 		
 	}
+	
+	printf("Vidas%d\tTiempo...%d\n",puntuacion, cuentaatras);
+	printf("TOPO\t 1\t 2\t 3\t\n");
+	printf("Estado\t %d\t %d\t %d\t\n",n_topo[0].estado, n_topo[1].estado, n_topo[2].estado);
+	printf("Acierto\t %d\t %d\t %d\t\n",n_topo[0].acierto, n_topo[1].acierto, n_topo[2].acierto);
+	printf("T_on\t %d\t %d\t %d\t\n",n_topo[0].t_on, n_topo[1].t_on, n_topo[2].t_on);
+	printf("T_off\t %d\t %d\t %d\t\n",n_topo[0].t_off, n_topo[1].t_off, n_topo[2].t_off);
 	
 	if ((flag & F_STOP) == F_STOP){stop = 1;}
 	return stop;
@@ -184,19 +190,31 @@ static int jugando (fsm_t* this) {
 
 static void inicio (fsm_t* this) {
 	// Empieza la partida
+	char aux[MSG_MAX];
+	
 	printf("Partida iniciada\n");
+	cuentaatras = TIEMPO_JUEGO;
+	puntuacion = PTOS_MAX;
 	mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_PLAY);
+	sprintf(aux, "%d", puntuacion);
+	mqtt_publicar(cliente, CANAL_PUNTUACION, aux);
 }
 static void fin (fsm_t* this) {
 	// Termina la partida
+	char aux[MSG_MAX];
+	
 	printf("Partida terminada\n");
 	
 	if ((flag & F_LOSE) == F_LOSE) mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_LOSE);
 	else if ((flag & F_WIN) == F_WIN) mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_WIN);
 	else mqtt_publicar(cliente, CANAL_ESTADO, MSG_CONTROL_STOP);
 	
-	mqtt_flag &= !F_PLAY; //Este permanece activo durante toda la partida, al finalizar se borra
-	mqtt_flag &= !F_STOP;
+	for(int i=0; i < MAX_TOPOS; i++){mqtt_publicar(cliente, (char *)servo[i], aux);}
+	
+	flag &= !F_PLAY; //Este permanece activo durante toda la partida, al finalizar se borra
+	flag &= !F_STOP;
+	flag &= !F_WIN;
+	flag &= !F_LOSE;
 }
 
 // FSM
@@ -226,9 +244,12 @@ int main (){
 	}
 	
 	//Inicializamos topos
-	for(int i = 0; i < sizeof(n_topo)/sizeof(*n_topo); i++){crear_topo(&n_topo[i]);}
+	//for(int i = 0; i < sizeof(n_topo)/sizeof(*n_topo); i++){crear_topo(&n_topo[i]);}
 	
 	//Fuerzo inicializacion de topos
+	crear_topo(&n_topo[0]);
+	crear_topo(&n_topo[1]);
+	crear_topo(&n_topo[2]);
 	n_topo[0].id=1; //topo1
 	n_topo[1].id=2; //topo1
 	n_topo[2].id=3; //topo1
