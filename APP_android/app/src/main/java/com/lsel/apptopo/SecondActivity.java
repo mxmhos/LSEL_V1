@@ -2,6 +2,7 @@ package com.lsel.apptopo;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -11,6 +12,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -27,7 +29,7 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
      * Constants for sensors
      */
     private static final float SHAKE_THRESHOLD = 1.1f;
-    private static final int SHAKE_WAIT_TIME_MS = 100;
+    private static final int SHAKE_WAIT_TIME_MS = 200;
     private static final float ROTATION_THRESHOLD = 2.5f;
     private static final int ROTATION_WAIT_TIME_MS = 300;
 
@@ -48,12 +50,20 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
     /**
      * UI
      */
-    private TextView mAccx;
-    private TextView mAccy;
-    private TextView mAccz;
-    private int estado = 2;
-    private float gX = 0;
-    private float gXlast = 0;
+    private TextView mAccX;
+    private TextView mPosX;
+    private TextView mSendX;
+    private TextView mAccY;
+    private TextView mPosY;
+    private TextView mSendY;
+    private TextView test_text;
+    private int gX = 0;
+    private int gXlast = 0;
+    private int xAct = 0;
+    private int gY = 0;
+    private int gYlast = 0;
+    private int yAct = 0;
+    private int test_num = 0;
     /**
      * Conexion MQTT
      */
@@ -65,6 +75,8 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_second);
         startMqtt();
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         // Get the sensors to use
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensorAcc = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -74,15 +86,19 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
         //soundAcc = MediaPlayer.create(this, R.raw.acc);
         soundGyro = MediaPlayer.create(this, R.raw.acc);
 
-        mAccx = (TextView) findViewById(R.id.accele_x);
-        mAccy = (TextView) findViewById(R.id.accele_y);
-        mAccz = (TextView) findViewById(R.id.accele_z);
+        mAccX = (TextView) findViewById(R.id.accele_x);
+        mPosX = (TextView) findViewById(R.id.pocision_x);
+        mSendX = (TextView) findViewById(R.id.envio_x);
+        mAccY = (TextView) findViewById(R.id.accele_y);
+        mPosY = (TextView) findViewById(R.id.pocision_y);
+        mSendY = (TextView) findViewById(R.id.envio_y);
+        test_text = (TextView) findViewById(R.id.test_view);
 
         btnStop = (Button) findViewById(R.id.stop);
         btnStop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mqttHelper.publishToTopic("android","3 0 0");
+                mqttHelper.publishToTopic("MANDO/stop","1");
                //estado = 3;
             }
         });
@@ -90,7 +106,7 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mqttHelper.publishToTopic("android","2 0 0");
+                mqttHelper.publishToTopic("MANDO/start","1");
                 //estado = 2;
             }
         });
@@ -116,17 +132,14 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
         if (event.accuracy == SensorManager.SENSOR_STATUS_UNRELIABLE) {
 
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-                mAccx.setText(R.string.act_main_no_acuracy);
-                mAccy.setText(R.string.act_main_no_acuracy);
-                mAccz.setText(R.string.act_main_no_acuracy);
+                mAccX.setText(R.string.act_main_no_acuracy);
+                mPosX.setText(R.string.act_main_no_acuracy);
+                mSendX.setText(R.string.act_main_no_acuracy);
             }
             return;
         }
 
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            mAccx.setText("x = " + Float.toString(event.values[0]));
-            mAccy.setText("y = " + Float.toString(event.values[1]));
-            mAccz.setText("z = " + Float.toString(event.values[2]));
             detectShake(event);
 
         }else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE){
@@ -148,55 +161,84 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
         long now = System.currentTimeMillis();
         String msg;
 
-        if ((now - mShakeTime) > SHAKE_WAIT_TIME_MS) {
+        //if ((now - mShakeTime) > SHAKE_WAIT_TIME_MS) {
             mShakeTime = now;
-            if (event.values[0] > 0) {
-                if ((event.values[0] > 3.5) && ((event.values[0] < 6))) {
-                    if ((gX + 3) <= 50) {
-                        gX = gX + 3;
-                    } else gX = 50;
-                } else {
-                    if ((event.values[0] >= 6)) {
-                        if ((gX + 7) <= 50) {
-                            gX = gX + 7;
-                        } else gX = 50;
-                    }
-                }
-            }
-            else{
-                    if ((event.values[0] < -3.5) && ((event.values[0] > -6))) {
-                        if ((gX - 3) >= -50) {
-                            gX = gX - 3;
-                        } else gX = -50;
-                    } else {
-                        if ((event.values[0] <= -6)) {
-                            if ((gX - 7) >= -50) {
-                                gX = gX - 7;
-                            } else gX = -50;
-                        }
-                    }
-                }
+            xAct=Math.round(event.values[0]*10);
+            yAct=Math.round(event.values[1]*10);
 
+
+ // Procedimiento de envio de info X
+
+            // Tabla de sensibilidad
+            if (xAct>70){ xAct=150; } else
+            if (xAct>60){ xAct=90; } else
+            if (xAct>50){ xAct=65; } else
+            if (xAct>40){ xAct=40; } else
+            if (xAct>30){ xAct=20; } else
+            if (xAct>20){ xAct=10; } else
+            if (xAct>10){ xAct=3; } else
+            if (xAct<-70){ xAct=-150; }else
+            if (xAct<-60){ xAct=-90; } else
+            if (xAct<-50){ xAct=-65; }else
+            if (xAct<-40){ xAct=-40; } else
+            if (xAct<-30){ xAct=-20; }else
+            if (xAct<-20){ xAct=-10; } else
+            if (xAct<-10){ xAct=-3; }else
+                xAct=0;
+
+            //comparo e incremento
+            mAccX.setText("incX = " + Integer.toString(xAct));
+            if (gX+xAct<-500) { if (gX!=-500) {gX=-500;}} else
+            if (gX+xAct>500) { if (gX!=500) {gX=500;}} else
+            if (xAct!=0) {gX=gX+xAct;}
+            mPosX.setText("posX = " + Integer.toString(gX));
+            mSendX.setText("sendX = " + Integer.toString(gX/10));
+
+            // envio si hubo cambio
             if (gX != gXlast){
-                msg = "" + estado + " " + gX + " " + 0;
-                mqttHelper.publishToTopic("android",msg);
-                estado = 0;
+                msg = ""+gX/10+"";
+                mqttHelper.publishToTopic("MANDO/x",msg);
             }
             gXlast = gX;
-            // / SensorManager.GRAVITY_EARTH;
-            //float gY = event.values[1] - 5.0;/// SensorManager.GRAVITY_EARTH;
-            //float gZ = event.values[2] - 5.0;/// SensorManager.GRAVITY_EARTH;
 
-            // gForce will be close to 1 when there is no movement
-            //double gForce = Math.sqrt(gX * gX + gY * gY + gZ * gZ);
+ // Procedimiento de envio de info Y
 
-            // Change background color if gForce exceeds threshold;
-            // otherwise, reset the color
-           // if (gForce > SHAKE_THRESHOLD) {
+            // Tabla de sensibilidad
+            if (yAct>90){ yAct=100; } else
+            if (yAct>80){ yAct=40; } else
+            if (yAct>70){ yAct=18; } else
+            if (yAct>60){ yAct=9; } else
+            if (yAct>50){ yAct=3; } else
+            if (yAct>40){ yAct=1; } else
+            if (yAct>30){ yAct=0; } else
+            if (yAct<-70){ yAct=-150; }else
+            if (yAct<-60){ yAct=-110; } else
+            if (yAct<-50){ yAct=-75; }else
+            if (yAct<-40){ yAct=-40; } else
+            if (yAct<-30){ yAct=-25; }else
+            if (yAct<-20){ yAct=-13; } else
+            if (yAct<-10){ yAct=-4; }else
+                yAct=0;
 
-                //soundAcc.start();
-            //}
-        }
+            //comparo e incremento
+            mAccY.setText("incY = " + Integer.toString(yAct));
+            if (gY+yAct<0) { if (gY!=0) {gY=0;}} else
+            if (gY+yAct>500) { if (gY!=500) {gY=500;}} else
+            if (yAct!=0) {gY=gY+yAct;}
+            mPosY.setText("posY = " + Integer.toString(gY));
+            mSendY.setText("sendY = " + Integer.toString(gY/10));
+
+            // envio si hubo cambio
+            if (gY != gYlast){
+                msg = ""+gY/10+"";
+                mqttHelper.publishToTopic("MANDO/y",msg);
+            }
+            gYlast = gY;
+
+            test_num=test_num+1;
+            test_text.setText("num = " + Integer.toString(test_num));
+            if (test_num>100) {test_num=0;}
+        //}
     }
 
     /**
@@ -209,15 +251,11 @@ public class SecondActivity extends AppCompatActivity implements SensorEventList
 
         if ((now - mRotationTime) > ROTATION_WAIT_TIME_MS) {
             mRotationTime = now;
-            String msg;
             // Change background color if rate of rotation around any
             // axis and in any direction exceeds threshold;
             // otherwise, reset the color
             if (Math.abs(event.values[0]) > ROTATION_THRESHOLD) {
-                estado = 1;
-                msg = "" + estado + " " + gX + " " + 0;
-                mqttHelper.publishToTopic("android",msg);
-                estado = 0;
+                mqttHelper.publishToTopic("MANDO/disparo","1");
                 soundGyro.start();
             }
         }
