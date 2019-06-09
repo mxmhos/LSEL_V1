@@ -1,12 +1,12 @@
 #include "cliente.h"
 #include "MQTTClient.h"
 
-#define ADDRESS    "172.16.2.4:1883" //  "192.168.1.202:1883" //
+#define ADDRESS    "192.168.1.102:1883" // "172.16.2.4:1883" //  
 #define CLIENTID    "servos"
 #define QOS         1
 #define TIMEOUT     10000L
 
-#define TOPIC_estado "JUEGO/CONTROL"
+#define TOPIC_estado "estado"
 #define TOPIC_modo "JUEGO/modo"
 #define TOPIC_atino "TOPO/sonido"
 #define TOPIC_posX "MANDO/x"
@@ -15,7 +15,7 @@
 #define TOPIC_android "android"
 
 int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *message) {
-	if (strcmp(topicName, "JUEGO/CONTROL")==0) {
+	if (strcmp(topicName, "estado")==0) {
 		if (atoi(message->payload)==1)
 			estado=1;
 		else
@@ -32,13 +32,13 @@ int msgarrvd(void *context, char *topicName, int topicLen, MQTTClient_message *m
 		printf("Recibo atino\n");
 	}
 	else if (strcmp(topicName, "MANDO/x")==0) {
-		next_move.x=atoi(message->payload);
+		next_move.x=(P_MAX+P_MIN)/2+atoi(message->payload);
 	}
 	else if (strcmp(topicName, "MANDO/y")==0) {
-		//next_move.y=atoi(message->payload);
+		next_move.y=P_MIN+atoi(message->payload);
 	}
 
-	//printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
+	printf("Pase los flags, con next_move.x = %d, next_move.y = %d\n", next_move.x, next_move.y);
 
 	MQTTClient_free(topicName);
 	MQTTClient_freeMessage(&message);
@@ -81,7 +81,6 @@ int mqtt_init() {
 	MQTTClient_subscribe(client, TOPIC_posX, QOS);
 	MQTTClient_subscribe(client, TOPIC_posY, QOS);
 	MQTTClient_subscribe(client, TOPIC_boton, QOS);
-	//MQTTClient_subscribe(client, TOPIC_android, QOS);
 
 
 	return 0;
